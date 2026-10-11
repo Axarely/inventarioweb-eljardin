@@ -42,18 +42,25 @@ Severidad según el plan de pruebas §7 (Crítica / Alta / Media / Baja).
 | R-07 | Baja | `inventario/templates/inventario/existencias.html` | Si no hay ubicaciones, un dueño veía "Su usuario no tiene una sucursal asignada", que es falso para su rol. | Revisión manual (C5) | Mensaje distinto según el permiso | `test_rf05_dueno_sin_ubicaciones_mensaje_correcto` | Cerrado |
 | R-08 | Baja | `.coveragerc` | `conftest.py` (código de prueba) se contaba en la cobertura y la inflaba. | Lectura del informe de cobertura | Se omite en `.coveragerc` | — (configuración) | Cerrado |
 | R-09 | Baja | `autenticacion/forms.py` | **Riesgo aceptado.** El mensaje de bloqueo solo aparece para correos registrados (permite saber si un correo existe), y un atacante puede bloquear a un usuario a propósito durante 15 minutos. | Revisión manual (C1) | No se corrige: es inherente al bloqueo que pide el DEDS 3.5. Mitigación: el bloqueo es temporal y los límites se configuran (`LOGIN_MAX_INTENTOS`, `LOGIN_BLOQUEO_MINUTOS`). Se reevalúa en las pruebas de seguridad de la Fase 4. | `test_rf01_bloqueo_expira` | Aceptado |
+| R-11 | **Alta** | `autenticacion/forms.py`, `IniciarSesionForm.clean` | Al enviar el login con la contraseña vacía o un correo con formato inválido, se producía un **error 500**: Django no intenta autenticar y `get_user()` es `None`, pero se llamaba igual a `reiniciar_intentos(None)`. Afectaba la pantalla de entrada de todos los roles (RF-01). | **Prueba manual** en el navegador: traza `AttributeError` en el log de `runserver`. Las pruebas automatizadas no cubrían ese caso. | Solo se reinicia el contador si hay un usuario autenticado | `test_rf01_login_datos_incompletos_no_da_500` (4 casos) | Cerrado |
 | R-10 | Info | `inventario/servicios.py` | Los servicios crean `EntradaInventario` y `SalidaInventario` directamente: todavía no existe `MovimientoInventarioFactory`. | Revisión contra el DEDS 3.4 | Planificado para S2-01 (backlog del Sprint 2). No es un defecto del Sprint 1. | INT-01 (Sprint 2) | Abierto (planificado) |
 
 ## 3. Métricas de la revisión
 
 | Métrica | Valor |
 |---|---|
-| Hallazgos totales | 10 (8 defectos corregidos, 1 riesgo aceptado, 1 informativo) |
-| Por severidad (defectos) | Crítica 0 · Alta 1 · Media 2 · Baja 5 |
+| Hallazgos totales | 11 (9 defectos corregidos, 1 riesgo aceptado, 1 informativo) |
+| Por severidad (defectos) | Crítica 0 · Alta 2 · Media 2 · Baja 5 |
 | Detectados por pruebas automatizadas | 2 (R-01, R-02) |
-| Detectados por inspección manual | 6 (R-03 a R-08) |
-| Densidad de defectos | 8 / 1.435 KLOC ≈ **5.6 defectos por KLOC** (antes de la entrega) |
-| Pruebas antes → después de las correcciones | 157 pasan, 5 fallan → **163 pasan, 0 fallan** (se agregaron 6 pruebas de regresión) |
+| Detectados por inspección manual del código | 6 (R-03 a R-08) |
+| Detectados por prueba manual en el navegador | 1 (R-11) |
+| Densidad de defectos | 9 / 1.435 KLOC ≈ **6.3 defectos por KLOC** (antes de la entrega) |
+| Pruebas antes → después de las correcciones | 157 pasan, 5 fallan → **167 pasan, 0 fallan** (se agregaron 10 pruebas de regresión) |
+
+**Lección (R-11):** una suite con 97 % de cobertura no detectó un error 500 en la pantalla más usada,
+porque ninguna prueba enviaba el formulario de login incompleto. La cobertura mide qué líneas se
+ejecutan, no qué combinaciones de entrada se prueban. Esto justifica mantener las pruebas manuales
+exploratorias del plan de pruebas (§2.4).
 
 ## 4. Evidencia
 

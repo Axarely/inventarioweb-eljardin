@@ -27,5 +27,7 @@ class IniciarSesionForm(AuthenticationForm):  # RF-01, RNF-02
             if correo:
                 servicios.registrar_intento_fallido(correo)
             raise
-        servicios.reiniciar_intentos(self.get_user())
+        # R-11: con correo inválido o contraseña vacía Django no autentica y get_user() es None.
+        if self.get_user() is not None:
+            servicios.reiniciar_intentos(self.get_user())
         return datos

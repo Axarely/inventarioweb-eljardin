@@ -113,6 +113,18 @@ def test_rf01_mensaje_generico_en_fallo(client, bodeguero):
     assert "Correo o contraseña incorrectos." in respuesta.content.decode()
 
 
+@pytest.mark.parametrize(
+    "correo, password",
+    [("bodeguero@eljardin.test", ""), ("no-es-correo", PASSWORD), ("", ""), ("", PASSWORD)],
+)
+def test_rf01_login_datos_incompletos_no_da_500(client, bodeguero, correo, password):
+    """Regresión R-11: correo inválido o contraseña vacía mostraban un error 500."""
+    respuesta = _login(client, correo, password)
+    assert respuesta.status_code == 200
+    assert respuesta.context["form"].errors
+    assert "_auth_user_id" not in client.session
+
+
 # --- Bloqueo tras intentos fallidos (CP-RF01-07, RNF-02) --------------------------------------
 
 def test_rf01_bloqueo_tras_intentos_fallidos(client, bodeguero, settings):

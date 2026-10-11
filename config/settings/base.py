@@ -61,6 +61,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "autenticacion.menu.menu",  # RF-01: menú filtrado por rol
             ],
         },
     },
@@ -74,6 +75,7 @@ DATABASES["default"]["ATOMIC_REQUESTS"] = False  # las transacciones se declaran
 
 # RF-01 / RNF-02: usuario propio, login por correo, contraseñas con hash (PBKDF2 por defecto)
 AUTH_USER_MODEL = "usuarios.Usuario"
+AUTHENTICATION_BACKENDS = ["autenticacion.backends.RolBackend"]  # RBAC: permisos del Rol
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -83,6 +85,14 @@ AUTH_PASSWORD_VALIDATORS = [
 LOGIN_URL = "autenticacion:login"
 LOGIN_REDIRECT_URL = "inicio"
 LOGOUT_REDIRECT_URL = "autenticacion:login"
+
+# RNF-02 (DEDS 3.5): bloqueo temporal tras intentos fallidos consecutivos
+LOGIN_MAX_INTENTOS = env.int("LOGIN_MAX_INTENTOS", default=5)
+LOGIN_BLOQUEO_MINUTOS = env.int("LOGIN_BLOQUEO_MINUTOS", default=15)
+
+from django.contrib.messages import constants as mensajes  # noqa: E402
+
+MESSAGE_TAGS = {mensajes.ERROR: "danger"}
 
 # RNF-02 (DEDS 3.5): sesión con expiración por inactividad. Cada petición renueva el plazo.
 SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=30 * 60)

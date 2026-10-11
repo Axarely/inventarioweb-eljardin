@@ -10,17 +10,28 @@
 <body>
   <header class="navbar navbar-dark barra-superior px-3">
     <span class="navbar-brand mb-0 h1">InventarioWeb El Jardín</span>
-    {% if user.is_authenticated %}<span class="text-white small">{{ user.nombre }}</span>{% endif %}
+    {% if user.is_authenticated %}
+      <span class="d-flex align-items-center gap-2">
+        <span class="text-white small d-none d-sm-inline">{{ user.nombre }}{% if user.rol %} · {{ user.rol }}{% endif %}</span>
+        <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#menu-lateral"
+                aria-controls="menu-lateral" aria-expanded="false" aria-label="Mostrar menú">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </span>
+    {% endif %}
   </header>
   <div class="container-fluid">
     <div class="row">
       {% if user.is_authenticated %}
-      {# Menú lateral persistente (DEDS 3.5). El filtrado por rol se implementa en el Sprint 1 (RF-01). #}
-      <nav class="col-md-3 col-lg-2 menu-lateral py-3">
-        <ul class="nav flex-column">
-          {% block menu %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'inicio' %}">Inicio</a></li>
-          {% endblock %}
+      {# Menú lateral persistente y filtrado por rol (DEDS 3.5, RF-01): ver autenticacion/menu.py #}
+      <nav id="menu-lateral" class="col-md-3 col-lg-2 menu-lateral py-3 collapse d-md-block">
+        <ul class="nav flex-column gap-1">
+          {% for opcion in menu %}
+            <li class="nav-item">
+              <a class="nav-link{% if opcion.activo %} active{% endif %}" href="{{ opcion.url }}"
+                 {% if opcion.activo %}aria-current="page"{% endif %}>{{ opcion.etiqueta }}</a>
+            </li>
+          {% endfor %}
           <li class="nav-item">
             <form method="post" action="{% url 'autenticacion:logout' %}">{% csrf_token %}
               <button type="submit" class="nav-link btn btn-link">Cerrar sesión</button>
@@ -28,12 +39,15 @@
           </li>
         </ul>
       </nav>
-      <main class="col-md-9 col-lg-10 py-4">
+      <main class="col-md-9 col-lg-10 py-4 px-md-4">
       {% else %}
       <main class="col-12 py-4">
       {% endif %}
         {% for mensaje in messages %}
-          <div class="alert alert-{{ mensaje.tags|default:'info' }}">{{ mensaje }}</div>
+          <div class="alert alert-{{ mensaje.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ mensaje }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+          </div>
         {% endfor %}
         {% block contenido %}{% endblock %}
       </main>

@@ -1,0 +1,27 @@
+{% if campo.widget_type == "checkbox" %}
+  <div class="form-check mb-3">
+    {{ campo }}
+    <label class="form-check-label" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+    {% for error in campo.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+  </div>
+{% elif campo.widget_type == "checkboxselectmultiple" %}
+  <fieldset class="mb-3">
+    <legend class="form-label fs-6">{{ campo.label }}</legend>
+    <div class="lista-permisos border rounded p-2">
+      {% for opcion in campo %}
+        <div class="form-check">
+          {{ opcion.tag }}
+          <label class="form-check-label small" for="{{ opcion.id_for_label }}">{{ opcion.choice_label }}</label>
+        </div>
+      {% endfor %}
+    </div>
+    {% for error in campo.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+  </fieldset>
+{% else %}
+  <div class="mb-3">
+    <label class="form-label" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+    {{ campo }}
+    {% if campo.help_text %}<div class="form-text">{{ campo.help_text|safe }}</div>{% endif %}
+    {% for error in campo.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+  </div>
+{% endif %}

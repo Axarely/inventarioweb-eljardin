@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }} — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+<h1 class="h4 titulo-primario mb-3">{{ titulo }}</h1>
+<div class="card shadow-sm" style="max-width: 44rem">
+  <div class="card-body">
+    <form method="post" novalidate>{% csrf_token %}
+      {% if siguiente %}<input type="hidden" name="next" value="{{ siguiente }}">{% endif %}
+      {% include "_errores_form.html" %}
+      {% for campo in form %}
+        {% include "_campo.html" %}
+      {% endfor %}
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primario">Guardar</button>
+        <a href="{{ url_cancelar }}" class="btn btn-secundario">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

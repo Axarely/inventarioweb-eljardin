@@ -8,19 +8,32 @@
   --gris-neutro: #8B95A1;
 }
 
-body { font-family: Calibri, "Segoe UI", Arial, sans-serif; }
+body { font-family: Calibri, "Segoe UI", Arial, sans-serif; background-color: #f8f9fb; }
 
 .barra-superior { background-color: var(--azul-primario); }
 .titulo-primario { color: var(--azul-primario); }
 
-.menu-lateral { background-color: #f4f6f9; min-height: calc(100vh - 56px); }
-.menu-lateral .nav-link { color: var(--azul-primario); text-align: left; }
+/* Menú lateral persistente (DEDS 3.5) */
+.menu-lateral { background-color: #f1f4f8; border-right: 1px solid #dde3ea; }
+@media (min-width: 768px) { .menu-lateral { min-height: calc(100vh - 56px); } }
+.menu-lateral .nav-link { color: var(--azul-primario); text-align: left; border-radius: 6px; border: 1px solid transparent; }
+.menu-lateral .nav-link:hover { background-color: #e3eaf2; }
+.menu-lateral .nav-link.active { background-color: #dbe6f1; border-color: var(--azul-primario); font-weight: 600; }
 
-.btn-primario { background-color: var(--azul-primario); border-color: var(--azul-primario); color: #fff; }
-.btn-primario:hover { background-color: #173d5f; color: #fff; }
+/* Botones: primario relleno y secundario con borde (Fig. 21), esquinas de 6px */
+.btn-primario { background-color: var(--azul-primario); border-color: var(--azul-primario); color: #fff; border-radius: 6px; }
+.btn-primario:hover, .btn-primario:focus { background-color: #173d5f; border-color: #173d5f; color: #fff; }
+.btn-secundario { background-color: #fff; border: 1px solid var(--azul-primario); color: var(--azul-primario); border-radius: 6px; }
+.btn-secundario:hover, .btn-secundario:focus { background-color: #e3eaf2; color: var(--azul-primario); }
 
-/* Estados de existencia: siempre color + texto (accesibilidad, Fig. 21) */
-.pill { display: inline-block; padding: .1rem .6rem; border-radius: 1rem; border: 1px solid; font-size: .85rem; }
-.pill-normal { color: var(--verde-exito); border-color: var(--verde-exito); }
-.pill-bajo { color: var(--ambar-advertencia); border-color: var(--ambar-advertencia); }
-.pill-agotado { color: var(--rojo-critico); border-color: var(--rojo-critico); }
+/* Pills de estado: SIEMPRE color + texto, nunca solo color (accesibilidad, Fig. 21) */
+.pill { display: inline-block; padding: .1rem .7rem; border-radius: 1rem; border: 1px solid; font-size: .85rem; font-weight: 600; white-space: nowrap; }
+.pill-normal { color: #2f6e48; border-color: var(--verde-exito); background-color: #e8f4ec; }
+.pill-bajo { color: #8a6119; border-color: var(--ambar-advertencia); background-color: #fbf1df; }
+.pill-agotado { color: #963630; border-color: var(--rojo-critico); background-color: #f9e6e5; }
+.pill-inactivo { color: #5d6670; border-color: var(--gris-neutro); background-color: #eef0f2; }
+
+.panel-existencia { border-color: #c8d3df; }
+.tarjeta-acceso { border-color: #c8d3df; transition: box-shadow .15s; }
+.tarjeta-acceso:hover, .tarjeta-acceso:focus { box-shadow: 0 0 0 .2rem rgba(31, 78, 121, .2); }
+.lista-permisos { max-height: 20rem; overflow-y: auto; background: #fff; }

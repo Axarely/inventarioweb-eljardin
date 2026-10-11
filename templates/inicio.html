@@ -1,6 +1,20 @@
 {% extends "base.html" %}
 {% block titulo %}Inicio — InventarioWeb El Jardín{% endblock %}
 {% block contenido %}
-<h1 class="h4">Bienvenido, {{ user.nombre }}</h1>
-<p class="text-muted">Sesión iniciada como {{ user.correo }}.</p>
+<h1 class="h4 titulo-primario">Bienvenido, {{ user.nombre }}</h1>
+<p class="text-muted">
+  Sesión iniciada como {{ user.correo }}{% if user.rol %} · rol {{ user.rol }}{% endif %}{% if user.sucursal %} · {{ user.sucursal }}{% endif %}.
+</p>
+<div class="row g-3">
+  {% for opcion in menu %}{% if opcion.url != "/" %}
+    <div class="col-sm-6 col-lg-4">
+      <a class="card tarjeta-acceso h-100 text-decoration-none" href="{{ opcion.url }}">
+        <div class="card-body"><span class="h6 titulo-primario">{{ opcion.etiqueta }}</span></div>
+      </a>
+    </div>
+  {% endif %}{% endfor %}
+</div>
+{% if not user.rol and not user.is_superuser %}
+  <div class="alert alert-warning mt-3">Su usuario no tiene un rol asignado. Contacte a un dueño.</div>
+{% endif %}
 {% endblock %}

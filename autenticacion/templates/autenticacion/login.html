@@ -8,9 +8,12 @@
       <div class="card-body p-4">
         <h1 class="h5 text-center titulo-primario">InventarioWeb El Jardín</h1>
         <p class="text-center text-muted small">Iniciar sesión</p>
-        {% if form.errors %}
-          <div class="alert alert-danger small">Correo o contraseña incorrectos.</div>
-        {% endif %}
+        {% for error in form.non_field_errors %}
+          <div class="alert alert-danger small" role="alert">{{ error }}</div>
+        {% endfor %}
+        {% for error in form.username.errors %}
+          <div class="alert alert-danger small" role="alert">{{ error }}</div>
+        {% endfor %}
         <form method="post" novalidate>{% csrf_token %}
           <div class="mb-3">
             <label for="id_username" class="form-label">Correo electrónico</label>

@@ -45,7 +45,7 @@ salidas básicas funcionando de forma transaccional.
 | S1-14 | "Consultar existencias": el encargado solo ve la suya, el dueño cualquiera; filtros por nombre y categoría; pills de estado (Fig. 17) | RF-05, RF-04 | 3 | CP-RF05-01…05 en verde |
 | S1-15 | Historial de movimientos por producto o ubicación (fecha, tipo, cantidad, usuario) | RF-12 | 2.5 | Lista cronológica correcta; el bodeguero y el dueño acceden |
 | S1-16 | Completar las pruebas unitarias del sprint y medir la cobertura | RF-01…05 | 6 | Suite en verde; cobertura medida y reportada tal como salga (meta ≥ 80 % en `inventario` y `usuarios`) |
-| S1-17 | Revisión de código formal documentada (`docs/revision_codigo_s1.md`): hallazgos y correcciones aplicadas | Consigna Fase 2 | 3 | Acta con hallazgos, severidad y commit de cada corrección |
+| S1-17 | Revisión de código formal documentada (`docs/revision_codigo.md`): hallazgos y correcciones aplicadas | Consigna Fase 2 | 3 | Acta con hallazgos, severidad y commit de cada corrección |
 | | **Total Sprint 1** | | **57** | |
 
 ---

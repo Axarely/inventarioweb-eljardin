@@ -21,6 +21,16 @@ implementa).
 | D-09 | 2026-10-11 | Interpretación | El sistema se despliega en producción (Render) con una URL pública. | §2.1.2 del DEDS excluía "el despliegue en un ambiente de producción con usuarios reales", pero la consigna de MDS2 (Fase 4) lo exige. Manda la consigna. | Ninguno sobre el diseño: la Fig. 10 ya modela el despliegue. | RNF-04 |
 | D-10 | 2026-10-11 | Adición | `Usuario` tiene además `is_staff` y los campos de `PermissionsMixin` de Django. | Son necesarios para el admin de Django y el sistema de permisos que §3.5 elige para el RBAC. | Ninguno funcional. | RF-01, RF-10 |
 
+### Sprint 1
+
+| ID | Fecha | Tipo | Qué cambia | Por qué | Impacto | RF/RNF |
+|---|---|---|---|---|---|---|
+| D-11 | 2026-10-11 | Omisión | El formulario de entrada no tiene el campo "Observación (opcional)" del wireframe (Fig. 15). | La clase de diseño `MovimientoInventario` (Fig. 12) no tiene ese atributo: aparece solo en el diagrama de análisis (Fig. 2). Se sigue la Fig. 12, que es el modelo de diseño. | Bajo: ningún RF lo exige. | RF-02 |
+| D-12 | 2026-10-11 | Adición | `Usuario.intentos_fallidos` y `Usuario.bloqueado_hasta`. | El DEDS 3.5 exige un "bloqueo temporal tras varios intentos fallidos", y la Fig. 12 no tiene dónde guardarlo. Se persiste en la BD, y no en la caché, para que funcione con varios workers de gunicorn. | Bajo: dos campos no editables. | RNF-02 |
+| D-13 | 2026-10-11 | Adición | `Rol.codigo` identifica los 3 roles base (Dueño, Bodeguero, Encargado). Sus permisos los fija el código (`usuarios/roles.py`) y no se editan desde la interfaz; los roles adicionales sí. | Si el dueño pudiera quitar permisos a los roles base, podría romper el mínimo privilegio del DEDS 3.5 o quedarse sin acceso. | Bajo: el CRUD de roles (RF-10) aplica a los roles personalizados. | RF-01, RF-10 |
+| D-14 | 2026-10-11 | Interpretación | El rol Bodeguero tiene el permiso `add_producto` (sin opción de menú): puede crear un producto desde el formulario de entrada. | UC02, flujo alternativo A1: "Producto no existe en catálogo: el sistema permite crearlo antes de continuar". El resto del catálogo (listar, editar, desactivar) sigue siendo solo del Dueño. | Bajo. | RF-02, RF-09 |
+| D-15 | 2026-10-11 | Interpretación | Las entradas siempre van a la bodega central (`Bodega.central()`). | La interfaz `IInventario.registrar_entrada(producto_id, cantidad, proveedor_id, usuario_id)` no recibe la bodega, y el DEDS 1.1 describe una única bodega central. | Bajo: si en el futuro hubiera más bodegas, se agregaría el parámetro. | RF-02 |
+
 ## Plantilla para nuevas desviaciones
 
 ```

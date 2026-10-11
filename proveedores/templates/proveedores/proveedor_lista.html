@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titulo %}Proveedores — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# Wireframe Fig. 19 — Gestionar proveedores #}
+<h1 class="h4 titulo-primario">Proveedores</h1>
+<div class="d-flex flex-wrap gap-2 align-items-end mb-3">
+  <form method="get" class="flex-grow-1" style="max-width: 32rem">
+    <label class="form-label small" for="q">Buscar proveedor</label>
+    <div class="d-flex gap-2">
+      <input type="search" id="q" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Nombre del proveedor…">
+      <button class="btn btn-secundario" type="submit">Buscar</button>
+    </div>
+  </form>
+  {% if perms.proveedores.add_proveedor %}<a class="btn btn-primario ms-auto" href="{% url 'proveedores:crear' %}">+ Nuevo proveedor</a>{% endif %}
+</div>
+<div class="table-responsive">
+<table class="table table-bordered align-middle bg-white">
+  <thead class="table-light"><tr><th>Proveedor</th><th>Contacto</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+  <tbody>
+  {% for p in object_list %}
+    <tr>
+      <td>{{ p.nombre }}</td>
+      <td>{{ p.contacto|default:"—" }}</td>
+      <td>{% if p.activo %}<span class="pill pill-normal">Activo</span>{% else %}<span class="pill pill-inactivo">Inactivo</span>{% endif %}</td>
+      <td class="text-end text-nowrap">
+        {% if perms.proveedores.change_proveedor %}
+          <a class="btn btn-sm btn-secundario" href="{% url 'proveedores:editar' p.pk %}">Editar</a>
+          <form method="post" action="{% url 'proveedores:activar' p.pk %}" class="d-inline">{% csrf_token %}
+            <button class="btn btn-sm btn-secundario" type="submit">{% if p.activo %}Desactivar{% else %}Activar{% endif %}</button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4" class="text-muted">No hay proveedores que coincidan.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "_paginacion.html" %}
+{% endblock %}

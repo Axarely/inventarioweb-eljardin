@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block titulo %}Usuarios — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+<h1 class="h4 titulo-primario">Usuarios</h1>
+<div class="d-flex flex-wrap gap-2 align-items-end mb-3">
+  <form method="get" class="d-flex gap-2 flex-grow-1" style="max-width: 32rem">
+    <input type="search" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Buscar por nombre o correo…" aria-label="Buscar usuario">
+    <button class="btn btn-secundario" type="submit">Buscar</button>
+  </form>
+  {% if perms.usuarios.add_usuario %}<a class="btn btn-primario ms-auto" href="{% url 'usuarios:usuario_crear' %}">+ Nuevo usuario</a>{% endif %}
+</div>
+<div class="table-responsive">
+<table class="table table-bordered align-middle bg-white">
+  <thead class="table-light"><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Sucursal</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+  <tbody>
+  {% for u in object_list %}
+    <tr>
+      <td>{{ u.nombre }}</td>
+      <td>{{ u.correo }}</td>
+      <td>{{ u.rol|default:"—" }}</td>
+      <td>{{ u.sucursal|default:"—" }}</td>
+      <td>{% if u.activo %}<span class="pill pill-normal">Activo</span>{% else %}<span class="pill pill-inactivo">Inactivo</span>{% endif %}</td>
+      <td class="text-end text-nowrap">
+        {% if perms.usuarios.change_usuario %}
+          <a class="btn btn-sm btn-secundario" href="{% url 'usuarios:usuario_editar' u.pk %}">Editar</a>
+          <a class="btn btn-sm btn-secundario" href="{% url 'usuarios:usuario_password' u.pk %}">Contraseña</a>
+          {% if u.pk != user.pk %}
+          <form method="post" action="{% url 'usuarios:usuario_activar' u.pk %}" class="d-inline">{% csrf_token %}
+            <button class="btn btn-sm btn-secundario" type="submit">{% if u.activo %}Desactivar{% else %}Activar{% endif %}</button>
+          </form>
+          {% endif %}
+        {% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6" class="text-muted">No hay usuarios que coincidan.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "_paginacion.html" %}
+{% endblock %}

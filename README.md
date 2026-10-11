@@ -33,9 +33,33 @@ Copy-Item .env.example .env
 python manage.py migrate
 python manage.py createsuperuser
 
-# 5. Servidor de desarrollo -> http://127.0.0.1:8000/
+# 5. (Opcional) Datos de demostración
+python manage.py seed_demo
+
+# 6. Servidor de desarrollo -> http://127.0.0.1:8000/
 python manage.py runserver
 ```
+
+### Datos de demostración (`seed_demo`)
+
+Crea la bodega central, las sucursales Santa Cruz y Peña Blanca, 6 productos, 3 proveedores
+(uno inactivo), un usuario por rol y 19 movimientos iniciales. Los movimientos se registran con los
+mismos servicios de la aplicación, así que las existencias quedan coherentes con el historial. Se puede
+ejecutar varias veces sin duplicar nada.
+
+| Rol | Correo |
+|---|---|
+| Dueño | `duena@eljardin.test` |
+| Bodeguero | `bodeguero@eljardin.test` |
+| Encargado de sucursal (Santa Cruz) | `encargado.santacruz@eljardin.test` |
+| Encargado de sucursal (Peña Blanca) | `encargada.penablanca@eljardin.test` |
+
+Contraseña: con `DEBUG=True` es `JardinDemo-2026`. En producción el comando exige
+`--password` o la variable `DEMO_PASSWORD`.
+
+Los roles base y sus permisos se crean solos con `migrate` (`usuarios/roles.py`).
+Tras 5 intentos fallidos de inicio de sesión, la cuenta queda bloqueada 15 minutos (configurable con
+`LOGIN_MAX_INTENTOS` y `LOGIN_BLOQUEO_MINUTOS`).
 
 En Linux/macOS es igual, salvo que se activa con `source .venv/bin/activate` y se copia con `cp`.
 

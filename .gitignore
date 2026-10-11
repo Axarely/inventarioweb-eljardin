@@ -1,0 +1,26 @@
+# Entorno y secretos
+.venv/
+venv/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Django
+staticfiles/
+media/
+*.log
+
+# Pruebas y cobertura
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Editores / SO
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

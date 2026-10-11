@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block titulo %}Iniciar sesión — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# Wireframe Fig. 13. Sin enlace "¿Olvidó su contraseña?": no hay RF (ver docs/desviaciones.md). #}
+<div class="row justify-content-center">
+  <div class="col-sm-8 col-md-5 col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h1 class="h5 text-center titulo-primario">InventarioWeb El Jardín</h1>
+        <p class="text-center text-muted small">Iniciar sesión</p>
+        {% if form.errors %}
+          <div class="alert alert-danger small">Correo o contraseña incorrectos.</div>
+        {% endif %}
+        <form method="post" novalidate>{% csrf_token %}
+          <div class="mb-3">
+            <label for="id_username" class="form-label">Correo electrónico</label>
+            <input type="email" name="username" id="id_username" class="form-control"
+                   value="{{ form.username.value|default:'' }}" autocomplete="email" required autofocus>
+          </div>
+          <div class="mb-3">
+            <label for="id_password" class="form-label">Contraseña</label>
+            <input type="password" name="password" id="id_password" class="form-control"
+                   autocomplete="current-password" required>
+          </div>
+          <input type="hidden" name="next" value="{{ next }}">
+          <button type="submit" class="btn btn-primario w-100">Entrar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

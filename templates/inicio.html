@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block titulo %}Inicio — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+<h1 class="h4">Bienvenido, {{ user.nombre }}</h1>
+<p class="text-muted">Sesión iniciada como {{ user.correo }}.</p>
+{% endblock %}

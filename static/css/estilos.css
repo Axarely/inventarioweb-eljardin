@@ -1,0 +1,26 @@
+/* Guía de estilo DEDS Fig. 21 */
+:root {
+  --azul-primario: #1F4E79;
+  --azul-secundario: #7FA8CB;
+  --verde-exito: #3F8F5F;
+  --ambar-advertencia: #C08A2E;
+  --rojo-critico: #B5443E;
+  --gris-neutro: #8B95A1;
+}
+
+body { font-family: Calibri, "Segoe UI", Arial, sans-serif; }
+
+.barra-superior { background-color: var(--azul-primario); }
+.titulo-primario { color: var(--azul-primario); }
+
+.menu-lateral { background-color: #f4f6f9; min-height: calc(100vh - 56px); }
+.menu-lateral .nav-link { color: var(--azul-primario); text-align: left; }
+
+.btn-primario { background-color: var(--azul-primario); border-color: var(--azul-primario); color: #fff; }
+.btn-primario:hover { background-color: #173d5f; color: #fff; }
+
+/* Estados de existencia: siempre color + texto (accesibilidad, Fig. 21) */
+.pill { display: inline-block; padding: .1rem .6rem; border-radius: 1rem; border: 1px solid; font-size: .85rem; }
+.pill-normal { color: var(--verde-exito); border-color: var(--verde-exito); }
+.pill-bajo { color: var(--ambar-advertencia); border-color: var(--ambar-advertencia); }
+.pill-agotado { color: var(--rojo-critico); border-color: var(--rojo-critico); }

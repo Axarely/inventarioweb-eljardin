@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Registrar entrada — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# Wireframe Fig. 15 — UC02 Registrar entrada de mercadería a bodega (RF-02, RF-11) #}
+<h1 class="h4 titulo-primario mb-3">Registrar entrada de mercadería a bodega</h1>
+<div class="row g-4">
+  <div class="col-lg-8">
+    <form method="post" novalidate id="form-movimiento">{% csrf_token %}
+      {% include "_errores_form.html" %}
+      {% with campo=form.producto %}{% include "_campo.html" %}{% endwith %}
+      {% if perms.usuarios.add_producto %}
+        <p class="small mt-n2">¿No está en el catálogo? <a href="{% url 'usuarios:producto_crear' %}?next={{ request.path|urlencode }}">Crear producto</a></p>
+      {% endif %}
+      <div class="row">
+        <div class="col-sm-6">{% with campo=form.cantidad %}{% include "_campo.html" %}{% endwith %}</div>
+        <div class="col-sm-6 mb-3">
+          <label class="form-label" for="unidad">Unidad</label>
+          <input type="text" id="unidad" class="form-control" value="" placeholder="kg / unidad / paquete" readonly tabindex="-1">
+        </div>
+      </div>
+      {% with campo=form.proveedor %}{% include "_campo.html" %}{% endwith %}
+      <div class="d-flex gap-2 mt-2">
+        <button type="submit" class="btn btn-primario">Registrar entrada</button>
+        <a href="{% url 'inicio' %}" class="btn btn-secundario">Cancelar</a>
+      </div>
+    </form>
+  </div>
+  <div class="col-lg-4">
+    {% include "inventario/_panel_bodega.html" with titulo_panel="Existencia actual en bodega" %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/movimientos.js' %}"></script>{% endblock %}

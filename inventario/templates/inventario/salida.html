@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load static inventario_extras %}
+{% block titulo %}Registrar salida — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# Wireframe Fig. 16 — UC03 Registrar salida hacia sucursal (RF-03) #}
+<h1 class="h4 titulo-primario mb-3">Registrar salida de mercadería hacia sucursal</h1>
+<div class="row g-4">
+  <div class="col-lg-8">
+    <form method="post" novalidate id="form-movimiento" data-validar-maximo="1">{% csrf_token %}
+      {% include "_errores_form.html" %}
+      {% with campo=form.sucursal %}{% include "_campo.html" %}{% endwith %}
+      {% with campo=form.producto %}{% include "_campo.html" %}{% endwith %}
+      <div class="row">
+        <div class="col-sm-6">{% with campo=form.cantidad %}{% include "_campo.html" %}{% endwith %}</div>
+      </div>
+      {% if cantidad_sugerida %}
+        {# UC03 A1: se sugiere la cantidad máxima disponible en vez de solo rechazar #}
+        <div class="alert alert-danger d-flex flex-wrap align-items-center gap-2" role="alert">
+          <span>Existencia insuficiente en bodega. Cantidad máxima disponible: <strong>{{ cantidad_sugerida|cantidad }}</strong>.</span>
+          <button type="button" class="btn btn-sm btn-outline-danger" id="usar-maximo" data-cantidad="{{ cantidad_sugerida|cantidad }}">Usar {{ cantidad_sugerida|cantidad }}</button>
+        </div>
+      {% endif %}
+      <div class="d-flex gap-2 mt-2">
+        <button type="submit" class="btn btn-primario">Registrar salida</button>
+        <a href="{% url 'inicio' %}" class="btn btn-secundario">Cancelar</a>
+      </div>
+    </form>
+  </div>
+  <div class="col-lg-4">
+    {% include "inventario/_panel_bodega.html" with titulo_panel="Validación de existencia" nota_panel="Si la cantidad enviada deja la existencia bajo el mínimo, el sistema generará una alerta automáticamente (UC05)." %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/movimientos.js' %}"></script>{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load inventario_extras %}
+{% block titulo %}Historial — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# RF-12: lista cronológica con fecha, tipo, cantidad y usuario #}
+<h1 class="h4 titulo-primario">Historial de movimientos</h1>
+<form method="get" class="row g-2 mb-3 align-items-end" style="max-width: 48rem">
+  <div class="col-sm-5">
+    <label class="form-label small" for="producto">Producto</label>
+    <select id="producto" name="producto" class="form-select">
+      <option value="">Todos</option>
+      {% for p in productos %}<option value="{{ p.pk }}" {% if request.GET.producto == p.pk|stringformat:"d" %}selected{% endif %}>{{ p.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-sm-5">
+    <label class="form-label small" for="ubicacion">Ubicación</label>
+    <select id="ubicacion" name="ubicacion" class="form-select">
+      <option value="">Todas</option>
+      {% for u in ubicaciones %}<option value="{{ u.pk }}" {% if request.GET.ubicacion == u.pk|stringformat:"d" %}selected{% endif %}>{{ u.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-sm-2"><button class="btn btn-secundario w-100" type="submit">Filtrar</button></div>
+</form>
+<div class="table-responsive">
+<table class="table table-bordered align-middle bg-white small">
+  <thead class="table-light">
+    <tr><th>Fecha</th><th>Tipo</th><th>Producto</th><th class="text-end">Cantidad</th><th>Origen</th><th>Destino</th><th>Proveedor</th><th>Usuario</th><th>Estado</th></tr>
+  </thead>
+  <tbody>
+  {% for m in movimientos %}
+    <tr>
+      <td class="text-nowrap">{{ m.fecha|date:"d/m/Y H:i" }}</td>
+      <td>{{ m.get_tipo_display }}</td>
+      <td>{{ m.producto.nombre }}</td>
+      <td class="text-end">{{ m.cantidad|cantidad }} {{ m.producto.unidad_medida }}</td>
+      <td>{{ m.origen|default:"—" }}</td>
+      <td>{{ m.destino|default:"—" }}</td>
+      <td>{% if m.tipo == "entrada" %}{{ m.entradainventario.proveedor }}{% else %}—{% endif %}</td>
+      <td>{{ m.usuario.nombre }}</td>
+      <td>{% if m.anulado %}<span class="pill pill-inactivo">Anulado</span>{% else %}<span class="pill pill-normal">Vigente</span>{% endif %}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="9" class="text-muted">No hay movimientos que coincidan.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "_paginacion.html" %}
+{% endblock %}

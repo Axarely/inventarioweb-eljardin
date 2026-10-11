@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load inventario_extras %}
+{% block titulo %}Existencias — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# Wireframe Fig. 17 — UC04 Consultar existencias por sucursal (RF-04, RF-05) #}
+<h1 class="h4 titulo-primario">Existencias{% if ubicacion %} — {{ ubicacion.get_tipo_display }} {{ ubicacion.nombre }}{% endif %}</h1>
+{% if ubicacion is None %}
+  {% if puede_todas %}
+    <div class="alert alert-warning">Todavía no hay ubicaciones registradas.</div>
+  {% else %}
+    <div class="alert alert-warning">Su usuario no tiene una sucursal asignada. Solicite a un dueño que la asigne.</div>
+  {% endif %}
+{% else %}
+<form method="get" class="row g-2 mb-3 align-items-end" style="max-width: 56rem">
+  {% if puede_todas %}
+  <div class="col-sm-4">
+    <label class="form-label small" for="ubicacion">Ubicación</label>
+    <select id="ubicacion" name="ubicacion" class="form-select">
+      {% for u in ubicaciones %}<option value="{{ u.pk }}" {% if u.pk == ubicacion.pk %}selected{% endif %}>{{ u.get_tipo_display }} {{ u.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  {% endif %}
+  <div class="col-sm-4">
+    <label class="form-label small" for="q">Buscar producto</label>
+    <input type="search" id="q" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Nombre del producto…">
+  </div>
+  <div class="col-sm-3">
+    <label class="form-label small" for="categoria">Categoría</label>
+    <select id="categoria" name="categoria" class="form-select">
+      <option value="">Todas</option>
+      {% for c in categorias %}<option value="{{ c }}" {% if request.GET.categoria == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-sm-1"><button class="btn btn-secundario w-100" type="submit">Filtrar</button></div>
+</form>
+<div class="table-responsive">
+<table class="table table-bordered align-middle bg-white">
+  <thead class="table-light"><tr><th>Producto</th><th>Categoría</th><th class="text-end">Existencia</th><th>Estado</th></tr></thead>
+  <tbody>
+  {% for e in existencias %}
+    <tr>
+      <td>{{ e.producto.nombre }}</td>
+      <td>{{ e.producto.categoria }}</td>
+      <td class="text-end">{{ e.cantidad|cantidad }} {{ e.producto.unidad_medida }}</td>
+      <td>{% pill_nivel e.nivel %}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4" class="text-muted">No hay existencias registradas que coincidan.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

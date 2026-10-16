@@ -52,8 +52,13 @@ observadores que se registran solos desde las apps observadoras (`alertas/apps.p
 | Productos concretos `EntradaInventario` / `SalidaInventario` | `inventario/models.py:296`, `:321` |
 | Clientes que usan la fábrica | `inventario/servicios.py:24` (entrada), `:35` (salida), `:47` (consumo), `:85` (corrección) |
 
+**Extensión real del patrón (D-33):** el tipo **Merma** (`MermaInventario`) se agregó al registro de la
+fábrica (`inventario/fabrica.py`) sin modificar a ningún cliente; `registrar_peso_real` lo crea con
+`MovimientoInventarioFactory.crear("merma", ...)` (`inventario/servicios.py`).
+
 **Pruebas:**
 - `inventario/tests/test_patrones.py`: crea cada tipo, rechaza un tipo desconocido, se puede extender.
+- `inventario/tests/test_merma.py::test_d33_factory_crea_merma`.
 - `test_int01_vistas_y_servicios_no_instancian_subclases` (l. 67): comprueba con el AST que vistas y servicios nunca llaman a `EntradaInventario(...)` ni a `SalidaInventario(...)`.
 
 ### 3.2 Observer (conductual, Fig. 23)

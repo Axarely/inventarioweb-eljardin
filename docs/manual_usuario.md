@@ -33,6 +33,19 @@ por debajo del stock mínimo) y **Agotado** (rojo).
 Si el producto no está en la lista, use el enlace **Crear producto**: al guardarlo vuelve al formulario.
 Si tampoco existe su categoría, escríbala en el campo **«¿No existe la categoría? Agréguela aquí»**.
 
+**Proteínas: registrar la merma (dos pasos)**
+
+Las proteínas que se limpian o preparan en producción (alitas, pechuga, tortas de res y de cerdo, camarón,
+langosta, filete) se registran en **libras** y en dos pasos:
+1. **Cuando llega el proveedor:** Menú → **Entradas**, con el peso que entregó (por ejemplo, 10 lb de alitas).
+   El panel le recuerda que el producto controla merma.
+2. **Cuando producción termina de limpiar:** Menú → **Merma**. En "Pendientes" escriba el **peso real** que
+   quedó (por ejemplo, 8 lb) y pulse **Registrar**. El sistema descuenta la merma (2 lb) de la bodega y muestra
+   el rendimiento (80 %).
+
+Los paquetes de res y de cerdo van por **unidad** y en una sola entrada. Si se equivocó con el peso real,
+anule la merma en el **Historial** y vuelva a registrarlo.
+
 **Enviar mercadería a una sucursal**
 1. Menú → **Salidas**.
 2. Elija la sucursal, el producto y la cantidad. El panel derecho avisa si alcanza o no.
@@ -59,6 +72,8 @@ Los movimientos nunca se borran: quedan en el historial marcados como "Anulado".
 - **Dashboard:** consumo de cada sucursal, comparativo Santa Cruz vs. Peña Blanca, alertas activas. Filtre
   por sucursal, producto y fechas. Con un producto elegido verá también el total y la evolución diaria.
   Los datos están siempre al día; no hace falta recargar nada a mano.
+- **Merma:** control interno de las proteínas: cuánto entregó cada proveedor, cuánto quedó después de
+  limpiar, la merma y el **rendimiento %** por producto. Filtre por producto o proveedor.
 - **Alertas:** productos en estado Bajo o Agotado. Cuando gestione la reposición, pulse
   **Marcar atendida**. Si un producto se **agota**, además le llega un **correo**.
 - **Existencias:** elija cualquier ubicación (bodega o sucursales).

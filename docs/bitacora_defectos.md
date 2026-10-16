@@ -26,15 +26,16 @@ resultado falso).
 | DEF-10 | 2026-10-16 | 4 | Producto | RF-09 (D-32) | Media | Las categorías **fijas** desaparecían después de un `flush` de la base de datos (en pruebas o con `manage.py flush`) y no se volvían a crear. Todo producto nuevo quedaba sin categoría para elegir. | Suite completa: `test_int07_salida_y_anulacion_concurrentes_sin_deadlock` falló en la preparación (`Categoria.DoesNotExist`) después de que otra prueba transaccional vaciara la base | Las fijas solo las creaba la migración de datos 0003, y `flush` borra esos datos. | `sincronizar_categorias_base()` en `post_migrate` (el mismo mecanismo que los roles base): se recrean y se corrigen el nombre y el orden después de cada `migrate` o `flush`. | `test_rf09_categorias_fijas_se_restauran_tras_flush` y la suite completa en verde | Cerrado |
 | DEF-11 | 2026-10-16 | 4 | Producto | RF-09 (D-32) | Baja | La página Categorías listaba las fijas en orden alfabético y no en el orden definido. | Prueba `test_rf09_pagina_categorias_agregar_y_eliminar` | La consulta agrupa (`annotate(Count(...))`), y en las consultas agrupadas Django ignora `Meta.ordering` desde la versión 3.1. | `order_by("orden", "nombre")` explícito en la vista. | La misma prueba | Cerrado |
 | DEF-12 | 2026-10-16 | 4 | Producto | RF-09 (D-32) | Media | La migración de categorías **no se podía revertir**: `migrate usuarios 0002` fallaba con "la columna «categoria» contiene valores null". La migración es atómica, así que no se perdió ningún dato. | **Prueba manual** de reversa sobre la BD de desarrollo (después de un respaldo con `pg_dump`) | Al revertir 0004, Django recreaba el campo de texto como obligatorio antes de rellenarlo. | En 0003 el campo de texto pasa a admitir nulos antes de reemplazarse, y las funciones de datos usan `SET CONSTRAINTS ALL IMMEDIATE` (evita "pending trigger events" en PostgreSQL). Revertir y volver a aplicar conserva las 7 categorías de los productos. | Verificación manual (reversa + reaplicación) | Cerrado |
+| DEF-13 | 2026-10-16 | 4 | Producto | D-33 | **Alta** | Registrar el peso real de una proteína fallaba siempre con un error de base de datos: "FOR UPDATE no puede ser aplicado al lado nulable de un outer join". La funcionalidad de merma quedaba inutilizable. | Pruebas automatizadas `test_merma.py` (10 casos fallidos) antes del commit | `select_for_update()` con `select_related("entrada__destino")`: `destino` admite nulos, así que Django genera un LEFT OUTER JOIN, y PostgreSQL no permite bloquear filas de ese lado. | `select_for_update(of=("self",))`: se bloquea solo la fila del control, que es lo que evita registrar dos veces el peso real. | `inventario/tests/test_merma.py` (22 pruebas) en verde | Cerrado |
 
 ## Resumen
 
 | Métrica | Valor |
 |---|---|
-| Defectos registrados | 12 (10 de producto, 2 de prueba) |
-| Por severidad (producto) | Crítica 0 · Alta 2 · Media 4 · Baja 4 |
-| Cerrados / aceptados / abiertos | 11 / 1 / 0 |
-| Detectados por pruebas automatizadas (unitarias, integración, sistema) | 8 (DEF-01, 02, 04, 06, 07, 09, 10, 11) |
+| Defectos registrados | 13 (11 de producto, 2 de prueba) |
+| Por severidad (producto) | Crítica 0 · Alta 3 · Media 4 · Baja 4 |
+| Cerrados / aceptados / abiertos | 12 / 1 / 0 |
+| Detectados por pruebas automatizadas (unitarias, integración, sistema) | 9 (DEF-01, 02, 04, 06, 07, 09, 10, 11, 13) |
 | Detectados por advertencias de la suite | 1 (DEF-05) |
 | Detectados por ejecución o prueba manual | 3 (DEF-03, DEF-08, DEF-12) |
 | Críticos o Altos abiertos | **0** (criterio de salida del plan de pruebas §4) |

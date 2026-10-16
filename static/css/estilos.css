@@ -1,46 +1,149 @@
-/* Guía de estilo DEDS Fig. 21 */
+/*
+ * Identidad visual de El Jardín (D-30): sustituye la paleta azul de la guía de estilo (DEDS Fig. 21)
+ * conservando sus reglas: botón primario relleno, secundario con borde, esquinas redondeadas y estados
+ * SIEMPRE con color + texto.
+ *   #1F3D2B verde jardín (primario) · #4E8A3E verde hoja (secundario) · #C77A4A cobre (acento)
+ * Variantes más oscuras (*-texto) para que el texto cumpla contraste WCAG AA sobre fondos claros.
+ */
 :root {
-  --azul-primario: #1F4E79;
-  --azul-secundario: #7FA8CB;
-  --verde-exito: #3F8F5F;
-  --ambar-advertencia: #C08A2E;
-  --rojo-critico: #B5443E;
+  --verde-jardin: #1F3D2B;
+  --verde-jardin-oscuro: #152B1E;
+  --verde-hoja: #4E8A3E;
+  --verde-hoja-texto: #2F5A25;
+  --cobre: #C77A4A;
+  --cobre-texto: #8A4F2A;
+  --cobre-oscuro: #A9623A;
+  --crema: #F7F3EC;
+  --rojo-critico: #B5443E;   /* Agotado: se mantiene rojo, es una señal de peligro */
   --gris-neutro: #8B95A1;
 }
 
-body { font-family: Calibri, "Segoe UI", Arial, sans-serif; background-color: #f8f9fb; }
+body { font-family: "Poppins", "Segoe UI", Arial, sans-serif; background-color: var(--crema); color: #24302A; }
 
-.barra-superior { background-color: var(--azul-primario); }
-.titulo-primario { color: var(--azul-primario); }
+.marca-script { font-family: "Great Vibes", "Brush Script MT", cursive; font-weight: 400; letter-spacing: .5px; }
+.marca-barra { font-size: 1.75rem; line-height: 1; color: #fff; }
+.marca-sub { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: #E8C9B3; }
+
+.barra-superior { background-color: var(--verde-jardin); border-bottom: 3px solid var(--cobre); }
+.titulo-primario { color: var(--verde-jardin); }
 
 /* Menú lateral persistente (DEDS 3.5) */
-.menu-lateral { background-color: #f1f4f8; border-right: 1px solid #dde3ea; }
-@media (min-width: 768px) { .menu-lateral { min-height: calc(100vh - 56px); } }
-.menu-lateral .nav-link { color: var(--azul-primario); text-align: left; border-radius: 6px; border: 1px solid transparent; }
-.menu-lateral .nav-link:hover { background-color: #e3eaf2; }
-.menu-lateral .nav-link.active { background-color: #dbe6f1; border-color: var(--azul-primario); font-weight: 600; }
+.menu-lateral { background-color: #EEF2EC; border-right: 1px solid #D5DED2; }
+@media (min-width: 768px) { .menu-lateral { min-height: calc(100vh - 59px); } }
+.menu-lateral .nav-link { color: var(--verde-jardin); text-align: left; border-radius: 8px; border: 1px solid transparent; }
+.menu-lateral .nav-link:hover { background-color: #E0E9DC; }
+.menu-lateral .nav-link.active { background-color: #DCE8D6; border-color: var(--verde-hoja); border-left: 4px solid var(--cobre); font-weight: 600; }
+.insignia { background: var(--cobre-oscuro); color: #fff; border-radius: 1rem; padding: 0 .5rem; font-size: .75rem; font-weight: 600; }
 
-/* Botones: primario relleno y secundario con borde (Fig. 21), esquinas de 6px */
-.btn-primario { background-color: var(--azul-primario); border-color: var(--azul-primario); color: #fff; border-radius: 6px; }
-.btn-primario:hover, .btn-primario:focus { background-color: #173d5f; border-color: #173d5f; color: #fff; }
-.btn-secundario { background-color: #fff; border: 1px solid var(--azul-primario); color: var(--azul-primario); border-radius: 6px; }
-.btn-secundario:hover, .btn-secundario:focus { background-color: #e3eaf2; color: var(--azul-primario); }
+/* Botones: primario relleno y secundario con borde (Fig. 21) */
+.btn-primario { background-color: var(--verde-jardin); border-color: var(--verde-jardin); color: #fff; border-radius: 8px; }
+.btn-primario:hover, .btn-primario:focus { background-color: var(--verde-hoja-texto); border-color: var(--verde-hoja-texto); color: #fff; }
+.btn-secundario { background-color: #fff; border: 1px solid var(--verde-jardin); color: var(--verde-jardin); border-radius: 8px; }
+.btn-secundario:hover, .btn-secundario:focus { background-color: #F3E6DC; border-color: var(--cobre); color: var(--cobre-texto); }
+.nav-pills .nav-link { color: var(--verde-jardin); }
+.nav-pills .nav-link.active { background-color: var(--verde-jardin); }
+.page-link { color: var(--verde-jardin); }
+.form-control:focus, .form-select:focus, .form-check-input:focus {
+  border-color: var(--verde-hoja); box-shadow: 0 0 0 .2rem rgba(78, 138, 62, .25);
+}
+.form-check-input:checked { background-color: var(--verde-hoja); border-color: var(--verde-hoja); }
+a { color: var(--verde-hoja-texto); }
+a:hover { color: var(--cobre-texto); }
 
 /* Pills de estado: SIEMPRE color + texto, nunca solo color (accesibilidad, Fig. 21) */
 .pill { display: inline-block; padding: .1rem .7rem; border-radius: 1rem; border: 1px solid; font-size: .85rem; font-weight: 600; white-space: nowrap; }
-.pill-normal { color: #2f6e48; border-color: var(--verde-exito); background-color: #e8f4ec; }
-.pill-bajo { color: #8a6119; border-color: var(--ambar-advertencia); background-color: #fbf1df; }
-.pill-agotado { color: #963630; border-color: var(--rojo-critico); background-color: #f9e6e5; }
-.pill-inactivo { color: #5d6670; border-color: var(--gris-neutro); background-color: #eef0f2; }
+.pill-normal { color: var(--verde-hoja-texto); border-color: var(--verde-hoja); background-color: #E7F1E3; }
+.pill-bajo { color: var(--cobre-texto); border-color: var(--cobre); background-color: #F8EBE2; }
+.pill-agotado { color: #963630; border-color: var(--rojo-critico); background-color: #F9E6E5; }
+.pill-inactivo { color: #5D6670; border-color: var(--gris-neutro); background-color: #EEF0F2; }
 
-.panel-existencia { border-color: #c8d3df; }
-.tarjeta-acceso { border-color: #c8d3df; transition: box-shadow .15s; }
-.tarjeta-acceso:hover, .tarjeta-acceso:focus { box-shadow: 0 0 0 .2rem rgba(31, 78, 121, .2); }
+.panel-existencia { border-color: #D5DED2; }
+.tarjeta-acceso { border-color: #D5DED2; transition: box-shadow .15s; }
+.tarjeta-acceso:hover, .tarjeta-acceso:focus { box-shadow: 0 0 0 .2rem rgba(199, 122, 74, .3); }
 .lista-permisos { max-height: 20rem; overflow-y: auto; background: #fff; }
 
 /* Panel de indicadores (Fig. 14) y alertas (Fig. 18): barra lateral de color + texto */
-.kpi { border-left: 6px solid var(--azul-primario); }
-.kpi-critico { border-left-color: var(--rojo-critico); }
+.kpi { border-left: 6px solid var(--verde-hoja); }
+.kpi-critico { border-left-color: var(--cobre); }
 .grafico { position: relative; height: 320px; }
-.tarjeta-alerta { border-left: 6px solid var(--ambar-advertencia); }
+.tarjeta-alerta { border-left: 6px solid var(--cobre); }
 .tarjeta-alerta-agotado { border-left-color: var(--rojo-critico); }
+
+/* ---------------------------------------------------------------------------------------------
+ * Pantallas de acceso (login y solicitud de cuenta): foto del restaurante + tarjeta de vidrio
+ * ------------------------------------------------------------------------------------------- */
+.pagina-acceso { background: var(--verde-jardin-oscuro); }
+.acceso {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem;
+  background:
+    linear-gradient(135deg, rgba(21, 43, 30, .55), rgba(31, 61, 43, .25) 45%, rgba(169, 98, 58, .35)),
+    url("../img/loginweb.jpg") center 35% / cover no-repeat fixed;
+}
+.acceso-tarjeta {
+  width: 100%; max-width: 980px; min-height: 560px; display: grid; grid-template-columns: 1.1fr 1fr;
+  border-radius: 22px; overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .35);
+  background: rgba(255, 255, 255, .06);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, .35);
+  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+}
+.acceso-portada {
+  position: relative; padding: 2.75rem; color: #fff; display: flex; flex-direction: column; justify-content: space-between;
+  background: linear-gradient(180deg, rgba(21, 43, 30, 0) 30%, rgba(21, 43, 30, .7));
+}
+.acceso-eyebrow { text-transform: uppercase; letter-spacing: .25em; font-size: .75rem; margin: 0; color: #F2DCCB; }
+.acceso-marca { font-size: clamp(3.5rem, 7vw, 5.5rem); line-height: 1; margin: .25rem 0 1rem; color: #F2C9A7;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, .55); }
+.acceso-lema { font-size: 1.35rem; font-weight: 500; line-height: 1.35; text-shadow: 0 2px 10px rgba(0, 0, 0, .6); margin: 0; }
+.acceso-cambio {
+  align-self: flex-start; display: inline-flex; flex-direction: column; gap: .1rem; padding: .85rem 1.25rem;
+  border-radius: 14px; color: #fff; text-decoration: none;
+  background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .45);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: background .2s;
+}
+.acceso-cambio span { font-size: .8rem; opacity: .9; }
+.acceso-cambio strong { font-size: 1.15rem; font-weight: 600; }
+.acceso-cambio:hover, .acceso-cambio:focus { background: rgba(199, 122, 74, .55); color: #fff; }
+
+.acceso-panel {
+  padding: 2.5rem 2.75rem; color: #fff;
+  background: rgba(31, 61, 43, .58);
+  border-left: 1px solid rgba(255, 255, 255, .25);
+  backdrop-filter: blur(16px) saturate(120%); -webkit-backdrop-filter: blur(16px) saturate(120%);
+}
+.acceso-logo { display: flex; flex-direction: column; align-items: flex-end; margin-bottom: 1.5rem; }
+.acceso-logo .marca-script { font-size: 2.4rem; line-height: 1; color: #F2C9A7; }
+.acceso-logo-sub { font-size: .7rem; letter-spacing: .25em; text-transform: uppercase; color: #E7EFE3; }
+.acceso-titulo { font-size: 1.6rem; font-weight: 500; text-transform: lowercase; margin-bottom: 1.25rem; }
+.acceso-titulo::first-letter { text-transform: uppercase; }
+.acceso-ayuda { font-size: .85rem; color: #E7EFE3; margin-bottom: 1rem; }
+.acceso-label { display: block; font-size: .85rem; font-weight: 500; margin: .75rem 0 .3rem; color: #fff; }
+.acceso-input {
+  width: 100%; padding: .65rem 1rem; border-radius: 999px; font-size: .95rem; color: var(--verde-jardin);
+  background: rgba(255, 255, 255, .88); border: 1px solid rgba(255, 255, 255, .6); outline: none;
+  transition: box-shadow .15s, background .15s;
+}
+.acceso-input::placeholder { color: #6E7A72; }
+.acceso-input:focus { background: #fff; box-shadow: 0 0 0 .25rem rgba(199, 122, 74, .55); }
+.acceso-input.es-invalido { box-shadow: 0 0 0 .2rem rgba(255, 170, 160, .9); }
+.acceso-error { font-size: .8rem; color: #FFD9D4; margin-top: .3rem; }
+.acceso-boton {
+  width: 100%; margin-top: 1.5rem; padding: .7rem 1rem; border-radius: 999px; border: 2px solid #fff;
+  background: #fff; color: var(--verde-jardin); font-weight: 600; font-size: 1rem; transition: background .2s, color .2s;
+}
+.acceso-boton:hover, .acceso-boton:focus { background: var(--cobre-oscuro); border-color: var(--cobre-oscuro); color: #fff; }
+.acceso-pie { margin-top: 1.25rem; font-size: .9rem; text-align: center; }
+.acceso-pie a, .acceso-panel .alert a { color: #F2C9A7; }
+.acceso-panel .alert { border-radius: 12px; }
+
+@media (max-width: 767.98px) {
+  .acceso { background-attachment: scroll; padding: 1rem; }
+  .acceso-tarjeta { grid-template-columns: 1fr; min-height: 0; }
+  .acceso-portada { padding: 1.75rem 1.5rem 1rem; background: none; }
+  .acceso-portada .acceso-cambio, .acceso-eyebrow { display: none; }
+  .acceso-marca { font-size: 3.5rem; margin-bottom: .25rem; }
+  .acceso-lema { font-size: 1.05rem; }
+  .acceso-panel { padding: 1.75rem 1.5rem; border-left: 0; border-top: 1px solid rgba(255, 255, 255, .25); }
+  .acceso-logo { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .acceso { background-attachment: scroll; } }

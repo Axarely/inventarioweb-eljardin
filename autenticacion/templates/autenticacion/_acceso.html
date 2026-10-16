@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block clase_body %}pagina-acceso{% endblock %}
+{% block cuerpo %}
+{# Pantalla de acceso: foto del restaurante de fondo y tarjeta de vidrio (D-30). #}
+<main class="acceso">
+  <div class="acceso-tarjeta">
+    <section class="acceso-portada" aria-hidden="false">
+      <div>
+        <p class="acceso-eyebrow">Restaurante</p>
+        <p class="marca-script acceso-marca">El Jardín</p>
+        <p class="acceso-lema">Su inventario de bodega y sucursales,<br>siempre al día.</p>
+      </div>
+      {% block cambio %}{% endblock %}
+    </section>
+    <section class="acceso-panel">
+      <div class="acceso-logo">
+        <span class="marca-script">El Jardín</span>
+        <span class="acceso-logo-sub">InventarioWeb</span>
+      </div>
+      <h1 class="acceso-titulo">{% block titulo_panel %}{% endblock %}</h1>
+      {% include "_mensajes.html" %}
+      {% block formulario %}{% endblock %}
+    </section>
+  </div>
+</main>
+{% endblock %}

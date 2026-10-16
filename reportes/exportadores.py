@@ -24,14 +24,14 @@ def a_excel(reporte):
     hoja = libro.active
     hoja.title = reporte.titulo[:31]
     hoja.append([reporte.titulo])
-    hoja["A1"].font = Font(bold=True, size=14, color="1F4E79")
+    hoja["A1"].font = Font(bold=True, size=14, color="1F3D2B")
     hoja.append([reporte.filtros])
     hoja.append([f"Generado: {timezone.localtime(reporte.generado_en):%d/%m/%Y %H:%M}"])
     hoja.append([])
     hoja.append(reporte.columnas)
     for celda in hoja[hoja.max_row]:
         celda.font = Font(bold=True, color="FFFFFF")
-        celda.fill = PatternFill("solid", fgColor="1F4E79")
+        celda.fill = PatternFill("solid", fgColor="1F3D2B")
     for fila in reporte.filas:
         hoja.append([valor for valor in fila])  # Decimal se guarda como número
     for i, columna in enumerate(reporte.columnas, start=1):
@@ -59,12 +59,12 @@ def a_pdf(reporte):
         datos.append(["Sin datos para los filtros seleccionados"] + [""] * (len(reporte.columnas) - 1))
     tabla = Table(datos, repeatRows=1)
     tabla.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1F4E79")),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1F3D2B")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("FONTSIZE", (0, 0), (-1, -1), 9),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#8B95A1")),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F1F4F8")]),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#EEF2EC")]),
     ]))
     documento.build([
         Paragraph(reporte.titulo, estilos["Title"]),

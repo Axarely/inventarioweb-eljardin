@@ -1,35 +1,29 @@
-{% extends "base.html" %}
+{% extends "autenticacion/_acceso.html" %}
 {% block titulo %}Iniciar sesión — InventarioWeb El Jardín{% endblock %}
-{% block contenido %}
-{# Wireframe Fig. 13. Sin enlace "¿Olvidó su contraseña?": no hay RF (ver docs/desviaciones.md). #}
-<div class="row justify-content-center">
-  <div class="col-sm-8 col-md-5 col-lg-4">
-    <div class="card shadow-sm">
-      <div class="card-body p-4">
-        <h1 class="h5 text-center titulo-primario">InventarioWeb El Jardín</h1>
-        <p class="text-center text-muted small">Iniciar sesión</p>
-        {% for error in form.non_field_errors %}
-          <div class="alert alert-danger small" role="alert">{{ error }}</div>
-        {% endfor %}
-        {% for error in form.username.errors %}
-          <div class="alert alert-danger small" role="alert">{{ error }}</div>
-        {% endfor %}
-        <form method="post" novalidate>{% csrf_token %}
-          <div class="mb-3">
-            <label for="id_username" class="form-label">Correo electrónico</label>
-            <input type="email" name="username" id="id_username" class="form-control"
-                   value="{{ form.username.value|default:'' }}" autocomplete="email" required autofocus>
-          </div>
-          <div class="mb-3">
-            <label for="id_password" class="form-label">Contraseña</label>
-            <input type="password" name="password" id="id_password" class="form-control"
-                   autocomplete="current-password" required>
-          </div>
-          <input type="hidden" name="next" value="{{ next }}">
-          <button type="submit" class="btn btn-primario w-100">Entrar</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
+{# Fig. 13 con la identidad visual del restaurante (D-30). Sin "¿Olvidó su contraseña?" (D-05). #}
+{% block cambio %}
+  <a class="acceso-cambio" href="{% url 'autenticacion:registro' %}">
+    <span>¿Aún no tiene cuenta?</span><strong>Solicitar acceso <span aria-hidden="true">›</span></strong>
+  </a>
+{% endblock %}
+{% block titulo_panel %}Iniciar sesión{% endblock %}
+{% block formulario %}
+  {% for error in form.non_field_errors %}
+    <div class="alert alert-danger small" role="alert">{{ error }}</div>
+  {% endfor %}
+  {% for error in form.username.errors %}
+    <div class="alert alert-danger small" role="alert">{{ error }}</div>
+  {% endfor %}
+  <form method="post" novalidate>{% csrf_token %}
+    <label for="id_username" class="acceso-label">Correo electrónico</label>
+    <input type="email" name="username" id="id_username" class="acceso-input"
+           value="{{ form.username.value|default:'' }}" placeholder="usuario@eljardin.com"
+           autocomplete="email" required autofocus>
+    <label for="id_password" class="acceso-label">Contraseña</label>
+    <input type="password" name="password" id="id_password" class="acceso-input"
+           placeholder="••••••••" autocomplete="current-password" required>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit" class="acceso-boton">Entrar</button>
+  </form>
+  <p class="acceso-pie d-md-none">¿Aún no tiene cuenta? <a href="{% url 'autenticacion:registro' %}">Solicitar acceso</a></p>
 {% endblock %}

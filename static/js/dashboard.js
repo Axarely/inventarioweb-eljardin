@@ -1,9 +1,9 @@
-// Gráficos del panel de indicadores (DEDS Fig. 14) con Chart.js. Colores de la guía de estilo (Fig. 21).
+// Gráficos del panel de indicadores (DEDS Fig. 14) con Chart.js. Paleta de El Jardín (D-30).
 (function () {
   const nodo = document.getElementById("datos-graficos");
   if (!nodo || typeof Chart === "undefined") return;
   const datos = JSON.parse(nodo.textContent);
-  const colores = ["#1F4E79", "#7FA8CB", "#3F8F5F", "#C08A2E", "#B5443E", "#8B95A1"];
+  const colores = ["#1F3D2B", "#C77A4A", "#4E8A3E", "#8A4F2A", "#9DBF8E", "#8B95A1"];
 
   function dibujar(id, tipo, grafico, ejeY) {
     const lienzo = document.getElementById(id);

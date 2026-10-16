@@ -175,7 +175,7 @@ def test_rf05_filtros_nombre_y_categoria(cliente_de, dueno, santa_cruz, producto
     cliente = cliente_de(dueno)
     por_nombre = cliente.get(URL_EXISTENCIAS, {"ubicacion": santa_cruz.pk, "q": "pollo"}).context["existencias"]
     por_categoria = cliente.get(
-        URL_EXISTENCIAS, {"ubicacion": santa_cruz.pk, "categoria": "Desechables"}
+        URL_EXISTENCIAS, {"ubicacion": santa_cruz.pk, "categoria": otro_producto.categoria_id}
     ).context["existencias"]
     assert [e.producto for e in por_nombre] == [producto]
     assert [e.producto for e in por_categoria] == [otro_producto]
@@ -211,10 +211,12 @@ def test_rnf01_consulta_existencias_consultas_acotadas(
     cliente_de, encargado_sc, santa_cruz, django_assert_max_num_queries, con_existencia
 ):
     """CP-RF05-06 (parcial): el número de consultas no crece con las filas (sin N+1)."""
+    from conftest import categoria_fija
     from usuarios.models import Producto
 
     for i in range(30):
-        p = Producto.objects.create(nombre=f"Producto {i}", categoria="X", unidad_medida="u.", stock_minimo=5)
+        p = Producto.objects.create(nombre=f"Producto {i}", categoria=categoria_fija("Varios"), unidad_medida="u.",
+                                    stock_minimo=5)
         con_existencia(p, santa_cruz, i)
     cliente = cliente_de(encargado_sc)
     with django_assert_max_num_queries(12):

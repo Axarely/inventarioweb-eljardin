@@ -8,10 +8,15 @@ import pytest
 
 from inventario.models import Bodega, Existencia, Sucursal
 from proveedores.models import Proveedor
-from usuarios.models import Producto, Rol, Usuario
+from usuarios.models import Categoria, Producto, Rol, Usuario
 from usuarios.roles import rol_base
 
 PASSWORD = "Clave-segura-123"
+
+
+def categoria_fija(nombre):
+    """Las categorías fijas las crea la migración usuarios.0003 (D-32)."""
+    return Categoria.objects.get(nombre=nombre)
 
 
 @pytest.fixture
@@ -32,14 +37,16 @@ def pena_blanca(db):
 @pytest.fixture
 def producto(db):
     return Producto.objects.create(
-        nombre="Pechuga de pollo", categoria="Cárnicos", unidad_medida="kg", stock_minimo=Decimal("10")
+        nombre="Pechuga de pollo", categoria=categoria_fija("Proteínas"), unidad_medida="kg",
+        stock_minimo=Decimal("10"),
     )
 
 
 @pytest.fixture
 def otro_producto(db):
     return Producto.objects.create(
-        nombre="Servilletas", categoria="Desechables", unidad_medida="paq.", stock_minimo=Decimal("5")
+        nombre="Servilletas", categoria=categoria_fija("Desechables y limpieza"), unidad_medida="paq.",
+        stock_minimo=Decimal("5"),
     )
 
 

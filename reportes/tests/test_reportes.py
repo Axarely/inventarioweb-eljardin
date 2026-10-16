@@ -56,17 +56,17 @@ def test_rf07_reporte_consumo_totales(escenario):
     reporte = servicios.reporte_consumo(Filtros())
     assert reporte.columnas == ["Sucursal", "Producto", "Categoría", "Unidad", "Total consumido", "Registros"]
     assert reporte.filas == [
-        ["Peña Blanca", "Pechuga de pollo", "Cárnicos", "kg", Decimal("3.00"), 1],
-        ["Peña Blanca", "Servilletas", "Desechables", "paq.", Decimal("4.00"), 1],
-        ["Santa Cruz", "Pechuga de pollo", "Cárnicos", "kg", Decimal("8.00"), 2],
+        ["Peña Blanca", "Pechuga de pollo", "Proteínas", "kg", Decimal("3.00"), 1],
+        ["Peña Blanca", "Servilletas", "Desechables y limpieza", "paq.", Decimal("4.00"), 1],
+        ["Santa Cruz", "Pechuga de pollo", "Proteínas", "kg", Decimal("8.00"), 2],
     ]
 
 
 def test_rf14_reporte_existencias(escenario):
     reporte = servicios.reporte_existencias(Filtros(sucursal=escenario["sc"]))
     assert [fila[:4] for fila in reporte.filas] == [
-        ["Santa Cruz", "Pechuga de pollo", "Cárnicos", Decimal("12.00")],
-        ["Santa Cruz", "Servilletas", "Desechables", Decimal("20.00")],
+        ["Santa Cruz", "Pechuga de pollo", "Proteínas", Decimal("12.00")],
+        ["Santa Cruz", "Servilletas", "Desechables y limpieza", Decimal("20.00")],
     ]
     assert reporte.filas[0][-1] == "Normal" and "Desde" not in reporte.filtros
 

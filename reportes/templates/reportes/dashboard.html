@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Panel de indicadores — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# Wireframe Fig. 14 — UC07 Panel de indicadores comparativo (RF-07, RF-08, RF-17) #}
+<h1 class="h4 titulo-primario">Panel de indicadores</h1>
+{% include "reportes/_filtros.html" %}
+{% if panel %}
+<p class="small text-muted mb-3">
+  Datos en tiempo real: incluyen todos los movimientos registrados hasta este momento
+  {% if panel.actualizado_en %}(último cambio de existencias: {{ panel.actualizado_en|date:"d/m/Y H:i:s" }}){% endif %}.
+</p>
+<div class="row g-3 mb-4">
+  {% for kpi in panel.kpis %}
+  <div class="col-sm-6 col-lg-4">
+    <div class="card kpi kpi-primario h-100"><div class="card-body">
+      <div class="small text-muted">Consumo {{ kpi.sucursal }}</div>
+      <div class="h3 mb-0 titulo-primario">{% if kpi.total %}{{ kpi.total }}{% else %}{{ kpi.consumos }} registro{{ kpi.consumos|pluralize }}{% endif %}</div>
+      <div class="small text-muted">{% if kpi.total %}{{ kpi.consumos }} registro{{ kpi.consumos|pluralize }} · {% endif %}{{ kpi.envios }} envío{{ kpi.envios|pluralize }} recibido{{ kpi.envios|pluralize }}</div>
+    </div></div>
+  </div>
+  {% endfor %}
+  <div class="col-sm-6 col-lg-4">
+    <a class="card kpi kpi-critico h-100 text-decoration-none" href="{% url 'alertas:lista' %}"><div class="card-body">
+      <div class="small text-muted">Alertas activas</div>
+      <div class="h3 mb-0 titulo-primario">{{ panel.alertas_activas }}</div>
+      <div class="small text-muted">requieren atención</div>
+    </div></a>
+  </div>
+</div>
+
+<div class="card mb-4"><div class="card-body">
+  <h2 class="h6">Comparativo de consumo por producto entre sucursales</h2>
+  {% if panel.comparativo.etiquetas %}
+    <div class="grafico"><canvas id="grafico-comparativo" aria-label="Consumo por producto y sucursal" role="img"></canvas></div>
+  {% else %}
+    <p class="text-muted mb-0">No hay consumos registrados para los filtros seleccionados.</p>
+  {% endif %}
+</div></div>
+
+<div class="card mb-4"><div class="card-body">
+  <h2 class="h6">Evolución diaria del consumo</h2>
+  {% if panel.serie_diaria %}
+    {% if panel.serie_diaria.etiquetas %}
+      <div class="grafico"><canvas id="grafico-diario" aria-label="Consumo diario por sucursal" role="img"></canvas></div>
+    {% else %}
+      <p class="text-muted mb-0">Sin consumos de este producto en el período.</p>
+    {% endif %}
+  {% else %}
+    <p class="text-muted mb-0">Seleccione un producto para ver su evolución diaria (las unidades de distintos productos no se suman).</p>
+  {% endif %}
+</div></div>
+
+<div class="card"><div class="card-body">
+  <h2 class="h6">Alertas recientes</h2>
+  <div class="table-responsive">
+  <table class="table table-sm align-middle mb-0">
+    <thead class="table-light"><tr><th>Producto</th><th>Ubicación</th><th>Nivel</th><th>Estado</th></tr></thead>
+    <tbody>
+    {% for alerta in panel.alertas_recientes %}
+      <tr>
+        <td>{{ alerta.existencia.producto.nombre }}</td>
+        <td>{{ alerta.existencia.ubicacion }}</td>
+        <td>{{ alerta.nivel_detectado_texto }}</td>
+        <td><span class="pill pill-{{ alerta.nivel_css }}">{{ alerta.nivel_texto }}</span></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="4" class="text-muted">No hay alertas pendientes.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div></div>
+{{ graficos|json_script:"datos-graficos" }}
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

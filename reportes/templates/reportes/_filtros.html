@@ -1,0 +1,18 @@
+<form method="get" class="row g-2 mb-3 align-items-end">
+  {% if tipo %}<input type="hidden" name="tipo" value="{{ tipo }}">{% endif %}
+  <div class="col-sm-6 col-lg-3">
+    <label class="form-label small" for="{{ form.sucursal.id_for_label }}">Sucursal</label>{{ form.sucursal }}
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <label class="form-label small" for="{{ form.producto.id_for_label }}">Producto</label>{{ form.producto }}
+  </div>
+  <div class="col-sm-4 col-lg-2">
+    <label class="form-label small" for="{{ form.desde.id_for_label }}">Desde</label>{{ form.desde }}
+  </div>
+  <div class="col-sm-4 col-lg-2">
+    <label class="form-label small" for="{{ form.hasta.id_for_label }}">Hasta</label>{{ form.hasta }}
+  </div>
+  <div class="col-sm-4 col-lg-2"><button class="btn btn-primario w-100" type="submit">Aplicar filtros</button></div>
+</form>
+{% include "_errores_form.html" %}
+{% for campo in form %}{% for error in campo.errors %}<div class="alert alert-danger small">{{ campo.label }}: {{ error }}</div>{% endfor %}{% endfor %}

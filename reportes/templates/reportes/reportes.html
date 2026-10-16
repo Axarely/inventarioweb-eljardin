@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load inventario_extras %}
+{% block titulo %}Reportes — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# RF-07 (consumo por sucursal/producto/período) y RF-14 (exportar PDF o Excel) #}
+<h1 class="h4 titulo-primario">Reportes</h1>
+<ul class="nav nav-pills mb-3">
+  {% for valor, etiqueta in tipos %}
+    <li class="nav-item"><a class="nav-link{% if tipo == valor %} active{% endif %}" href="?tipo={{ valor }}">{{ etiqueta }}</a></li>
+  {% endfor %}
+</ul>
+{% include "reportes/_filtros.html" %}
+{% if reporte %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+  <div>
+    <h2 class="h6 mb-0">{{ reporte.titulo }}</h2>
+    <div class="small text-muted">{{ reporte.filtros }}{% if tipo == "existencias" %} · las existencias son actuales; el rango de fechas no aplica{% endif %}</div>
+  </div>
+  {% if perms.reportes.exportar_reportes %}
+  <div class="ms-auto d-flex gap-2">
+    <a class="btn btn-secundario btn-sm" href="{% url 'reportes:exportar' 'excel' %}?{{ request.GET.urlencode }}{% if not request.GET.tipo %}&tipo={{ tipo }}{% endif %}">Exportar a Excel</a>
+    <a class="btn btn-secundario btn-sm" href="{% url 'reportes:exportar' 'pdf' %}?{{ request.GET.urlencode }}{% if not request.GET.tipo %}&tipo={{ tipo }}{% endif %}">Exportar a PDF</a>
+  </div>
+  {% endif %}
+</div>
+<div class="table-responsive">
+<table class="table table-bordered align-middle bg-white">
+  <thead class="table-light"><tr>{% for c in reporte.columnas %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for fila in reporte.filas %}
+    <tr>{% for valor in fila %}<td>{% if valor.as_tuple %}{{ valor|cantidad }}{% else %}{{ valor }}{% endif %}</td>{% endfor %}</tr>
+  {% empty %}
+    <tr><td colspan="{{ reporte.columnas|length }}" class="text-muted">Sin datos para los filtros seleccionados.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

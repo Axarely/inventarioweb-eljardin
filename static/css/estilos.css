@@ -37,3 +37,10 @@ body { font-family: Calibri, "Segoe UI", Arial, sans-serif; background-color: #f
 .tarjeta-acceso { border-color: #c8d3df; transition: box-shadow .15s; }
 .tarjeta-acceso:hover, .tarjeta-acceso:focus { box-shadow: 0 0 0 .2rem rgba(31, 78, 121, .2); }
 .lista-permisos { max-height: 20rem; overflow-y: auto; background: #fff; }
+
+/* Panel de indicadores (Fig. 14) y alertas (Fig. 18): barra lateral de color + texto */
+.kpi { border-left: 6px solid var(--azul-primario); }
+.kpi-critico { border-left-color: var(--rojo-critico); }
+.grafico { position: relative; height: 320px; }
+.tarjeta-alerta { border-left: 6px solid var(--ambar-advertencia); }
+.tarjeta-alerta-agotado { border-left-color: var(--rojo-critico); }

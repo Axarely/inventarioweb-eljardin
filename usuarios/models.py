@@ -173,6 +173,12 @@ class Producto(models.Model):
     nombre = models.CharField("nombre", max_length=120, unique=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="productos", verbose_name="categoría")
     unidad_medida = models.CharField("unidad de medida", max_length=20)
+    # D-33: entrada en dos pasos (peso bruto del proveedor -> peso real tras limpieza; la diferencia es merma)
+    controla_merma = models.BooleanField(
+        "controla merma", default=False,
+        help_text="Proteínas que se limpian o preparan en producción: se registra el peso del proveedor y luego "
+                  "el peso real; la diferencia queda como merma.",
+    )
     stock_minimo = models.DecimalField(
         "stock mínimo", max_digits=10, decimal_places=2, validators=[MinValueValidator(0)]
     )

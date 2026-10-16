@@ -4,13 +4,14 @@ MovimientoInventario se instancia, de modo que servicios y vistas no conocen Ent
 SalidaInventario.
 """
 from .excepciones import MovimientoInvalido
-from .models import EntradaInventario, MovimientoInventario, SalidaInventario
+from .models import EntradaInventario, MermaInventario, MovimientoInventario, SalidaInventario
 
 
 class MovimientoInventarioFactory:
     _tipos = {
         MovimientoInventario.Tipo.ENTRADA: EntradaInventario,
         MovimientoInventario.Tipo.SALIDA: SalidaInventario,
+        MovimientoInventario.Tipo.MERMA: MermaInventario,  # D-33
     }
 
     @classmethod

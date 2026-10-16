@@ -102,7 +102,7 @@ class ProductoForm(FormularioBootstrapMixin, forms.ModelForm):  # RF-09, D-32
 
     class Meta:
         model = Producto
-        fields = ["nombre", "categoria", "nueva_categoria", "unidad_medida", "stock_minimo"]
+        fields = ["nombre", "categoria", "nueva_categoria", "unidad_medida", "controla_merma", "stock_minimo"]
         widgets = {"stock_minimo": forms.NumberInput(attrs={"step": "0.01", "min": "0"})}
 
     def __init__(self, *args, puede_crear_categoria=False, **kwargs):

@@ -7,28 +7,110 @@ ni este módulo ni las vistas instancian EntradaInventario o SalidaInventario di
 from decimal import Decimal
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q, Sum
+from django.utils import timezone
 
 from proveedores.servicios import obtener_proveedor_activo
 from usuarios.models import Producto
 
-from .excepciones import MovimientoInvalido
+from .excepciones import MovimientoInvalido, formatear_cantidad
 from .fabrica import MovimientoInventarioFactory
-from .models import Bodega, DiscrepanciaInventario, Existencia, MovimientoInventario, Sucursal
+from .models import Bodega, ControlMerma, DiscrepanciaInventario, Existencia, MovimientoInventario, Sucursal
 
 ENTRADA = MovimientoInventario.Tipo.ENTRADA
 SALIDA = MovimientoInventario.Tipo.SALIDA
+MERMA = MovimientoInventario.Tipo.MERMA
 
 
 def registrar_entrada(producto_id, cantidad, proveedor_id, usuario_id):  # RF-02, RF-11
+    """Para proteínas con control de merma (D-33) esta es la PRIMERA entrada: el peso bruto del proveedor.
+    Queda pendiente registrar el peso real (registrar_peso_real)."""
+    producto = Producto.objects.get(pk=producto_id)
     entrada = MovimientoInventarioFactory.crear(ENTRADA, {
-        "producto": Producto.objects.get(pk=producto_id),
+        "producto": producto,
         "cantidad": cantidad,
         "proveedor": obtener_proveedor_activo(proveedor_id),
         "destino": Bodega.central(),
         "usuario_id": usuario_id,
     })
-    return entrada.aplicar()
+    with transaction.atomic():
+        entrada.aplicar()
+        if producto.controla_merma:
+            ControlMerma.objects.create(entrada=entrada)
+    return entrada
+
+
+def registrar_peso_real(control_id, peso_real, usuario):  # D-33: SEGUNDA entrada de proteínas
+    """
+    Registra el peso real después de limpieza o preparación. La merma (bruto - real) se descuenta de la
+    bodega como MermaInventario, creada por la Factory, para que la existencia quede en el peso real.
+    """
+    peso_real = Decimal(peso_real)
+    with transaction.atomic():
+        # DEF-13: se bloquea solo la fila del control; destino es nullable (outer join) y PostgreSQL no admite
+        # FOR UPDATE sobre el lado nulo de un outer join.
+        control = ControlMerma.objects.select_for_update(of=("self",)).select_related(
+            "entrada__producto", "entrada__destino"
+        ).get(pk=control_id)
+        entrada = control.entrada
+        if control.estado != ControlMerma.Estado.PENDIENTE:
+            raise MovimientoInvalido("El peso real de esta entrada ya fue registrado.")
+        if entrada.anulado:
+            raise MovimientoInvalido("La entrada del proveedor está anulada.")
+        if peso_real < 0:
+            raise MovimientoInvalido("El peso real no puede ser negativo.")
+        if peso_real > entrada.cantidad:
+            raise MovimientoInvalido(
+                f"El peso real no puede superar el peso entregado por el proveedor "
+                f"({formatear_cantidad(entrada.cantidad)} {entrada.producto.unidad_medida})."
+            )
+        merma = entrada.cantidad - peso_real
+        if merma > 0:
+            control.movimiento_merma = MovimientoInventarioFactory.crear(MERMA, {
+                "producto": entrada.producto,
+                "cantidad": merma,
+                "origen": entrada.destino,
+                "destino": None,
+                "usuario": usuario,
+            }).aplicar()
+        control.peso_real = peso_real
+        control.merma = merma
+        control.estado = ControlMerma.Estado.PROCESADO
+        control.procesado_por = usuario
+        control.procesado_en = timezone.now()
+        control.save()
+    return control
+
+
+def controles_merma(estado=None, producto_id=None, proveedor_id=None):  # D-33
+    controles = ControlMerma.objects.filter(entrada__anulado=False).select_related(
+        "entrada__producto", "entrada__proveedor", "entrada__usuario", "procesado_por"
+    )
+    if estado:
+        controles = controles.filter(estado=estado)
+    if producto_id:
+        controles = controles.filter(entrada__producto_id=producto_id)
+    if proveedor_id:
+        controles = controles.filter(entrada__proveedor_id=proveedor_id)
+    return controles
+
+
+def resumen_merma(controles):  # D-33: control interno por producto
+    filas = (
+        controles.filter(estado=ControlMerma.Estado.PROCESADO)
+        .values("entrada__producto__nombre", "entrada__producto__unidad_medida")
+        .annotate(recepciones=Count("id"), bruto=Sum("entrada__cantidad"), real=Sum("peso_real"), merma=Sum("merma"))
+        .order_by("entrada__producto__nombre")
+    )
+    resumen = []
+    for f in filas:
+        rendimiento = (f["real"] / f["bruto"] * 100).quantize(Decimal("0.1")) if f["bruto"] else None
+        resumen.append({
+            "producto": f["entrada__producto__nombre"], "unidad": f["entrada__producto__unidad_medida"],
+            "recepciones": f["recepciones"], "bruto": f["bruto"], "real": f["real"], "merma": f["merma"],
+            "rendimiento": rendimiento,
+        })
+    return resumen
 
 
 def registrar_salida(producto_id, cantidad, sucursal_id, usuario_id):  # RF-03
@@ -71,6 +153,13 @@ def corregir_movimiento(movimiento_id, nueva_cantidad, motivo, usuario):  # RF-1
         ).get(pk=movimiento_id)
         if nueva_cantidad == original.cantidad:
             raise MovimientoInvalido("La cantidad corregida es igual a la registrada.")
+        if original.tipo == MERMA:  # D-33
+            raise MovimientoInvalido("La merma no se corrige: anúlela y vuelva a registrar el peso real.")
+        control = ControlMerma.objects.filter(entrada_id=original.pk).first() if original.tipo == ENTRADA else None
+        if control is not None and control.estado == ControlMerma.Estado.PROCESADO:
+            raise MovimientoInvalido(
+                "Esta entrada ya tiene registrado su peso real. Anule primero la merma (Historial) y luego corrija."
+            )
         original.anular(motivo, usuario)
         datos = {
             "producto": original.producto,
@@ -82,7 +171,11 @@ def corregir_movimiento(movimiento_id, nueva_cantidad, motivo, usuario):  # RF-1
         }
         if original.tipo == ENTRADA:
             datos["proveedor"] = original.entradainventario.proveedor
-        return MovimientoInventarioFactory.crear(original.tipo, datos).aplicar()
+        nuevo = MovimientoInventarioFactory.crear(original.tipo, datos).aplicar()
+        if control is not None:  # D-33: el control pendiente pasa a la entrada corregida
+            control.entrada = nuevo
+            control.save(update_fields=["entrada"])
+        return nuevo
 
 
 def reportar_discrepancia(movimiento_id, cantidad_recibida, usuario):  # RF-13 (D-03)

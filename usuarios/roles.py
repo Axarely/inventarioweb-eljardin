@@ -16,12 +16,13 @@ PERMISOS_POR_ROL = {
         "proveedores.view_proveedor", "proveedores.add_proveedor", "proveedores.change_proveedor",
         "inventario.consultar_existencias_todas", "inventario.ver_historial",
         "inventario.anular_movimiento", "inventario.view_discrepanciainventario",
-        "alertas.view_alertainventario", "alertas.marcar_atendida",
+        "alertas.view_alertainventario", "alertas.marcar_atendida", "inventario.ver_control_merma",
         "reportes.ver_dashboard", "reportes.ver_reportes", "reportes.exportar_reportes",
     ],
     "bodeguero": [
         "inventario.registrar_entrada", "inventario.registrar_salida", "inventario.ver_historial",
         "inventario.anular_movimiento",  # RF-15: corrige los movimientos que registró por error
+        "inventario.registrar_peso_real", "inventario.ver_control_merma",  # D-33: proteínas
         # UC02 A1: si el producto no existe, el bodeguero puede crearlo antes de continuar.
         "usuarios.add_producto", "usuarios.add_categoria",
     ],

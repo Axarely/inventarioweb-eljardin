@@ -12,15 +12,19 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DatabaseError
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
-from django.views.generic import FormView, ListView
+from django.views.generic import FormView, ListView, TemplateView
 
 from autenticacion.mixins import PermisoRequeridoMixin
 from usuarios.models import Categoria, Producto
 
 from . import servicios
 from .excepciones import ExistenciaInsuficiente, formatear_cantidad
-from .forms import AnulacionForm, ConsumoForm, CorreccionForm, DiscrepanciaForm, EntradaForm, SalidaForm
-from .models import Existencia, MovimientoInventario, Ubicacion
+from proveedores.models import Proveedor
+
+from .forms import (
+    AnulacionForm, ConsumoForm, CorreccionForm, DiscrepanciaForm, EntradaForm, PesoRealForm, SalidaForm,
+)
+from .models import ControlMerma, Existencia, MovimientoInventario, Ubicacion
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +65,12 @@ class EntradaView(PermisoRequeridoMixin, FormView):  # RF-02, RF-11, UC02
             f"Entrada registrada: +{formatear_cantidad(entrada.cantidad)} {entrada.producto.unidad_medida} "
             f"de {entrada.producto}. Existencia en bodega: {formatear_cantidad(existencia.cantidad)}.",
         )
+        if entrada.producto.controla_merma:  # D-33
+            messages.info(
+                self.request,
+                f"{entrada.producto} controla merma: cuando producción lo limpie o prepare, registre el peso real "
+                "en Merma.",
+            )
         return redirect("inventario:entrada")
 
 
@@ -224,6 +234,62 @@ class CorregirView(MovimientoAccionMixin, FormView):  # RF-15 "editar" (D-18)
         return redirect("inventario:historial")
 
 
+class MermaView(LoginRequiredMixin, TemplateView):  # D-33: segunda entrada de proteínas y control interno
+    template_name = "inventario/merma.html"
+    PERMISOS = ("inventario.registrar_peso_real", "inventario.ver_control_merma")
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not any(request.user.has_perm(p) for p in self.PERMISOS):
+            raise PermissionDenied("Su rol no tiene acceso a esta función.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.has_perm("inventario.registrar_peso_real"):
+            raise PermissionDenied("Su rol no puede registrar el peso real.")
+        form = PesoRealForm(request.POST)
+        if form.is_valid():
+            try:
+                control = servicios.registrar_peso_real(
+                    form.cleaned_data["control"], form.cleaned_data["peso_real"], request.user
+                )
+            except ControlMerma.DoesNotExist:
+                raise Http404
+            except ValidationError as error:
+                messages.error(request, error.messages[0])
+            except DatabaseError:  # DEF-09: la transacción ya se revirtió
+                logger.exception("Error de base de datos al registrar el peso real")
+                messages.error(request, MENSAJE_ERROR_BD)
+            else:
+                unidad = control.entrada.producto.unidad_medida
+                messages.success(
+                    request,
+                    f"Peso real de {control.entrada.producto}: {formatear_cantidad(control.peso_real)} {unidad} "
+                    f"(merma {formatear_cantidad(control.merma)} {unidad}, rendimiento {control.rendimiento} %).",
+                )
+        else:
+            messages.error(request, "Escriba un peso real válido (0 o más).")
+        return redirect(request.get_full_path())
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        producto = self.request.GET.get("producto", "")
+        proveedor = self.request.GET.get("proveedor", "")
+        filtros = {
+            "producto_id": int(producto) if producto.isdigit() else None,
+            "proveedor_id": int(proveedor) if proveedor.isdigit() else None,
+        }
+        procesados = servicios.controles_merma(ControlMerma.Estado.PROCESADO, **filtros)
+        contexto.update(
+            pendientes=servicios.controles_merma(ControlMerma.Estado.PENDIENTE, **filtros),
+            procesados=procesados[:50],
+            resumen=servicios.resumen_merma(procesados),
+            productos=Producto.objects.filter(controla_merma=True),
+            proveedores=Proveedor.objects.all(),
+            puede_registrar=self.request.user.has_perm("inventario.registrar_peso_real"),
+        )
+        return contexto
+
+
 @login_required
 def existencia_bodega(request):
     """JSON con la existencia de un producto en bodega, para el panel lateral de las Fig. 15 y 16."""
@@ -242,6 +308,7 @@ def existencia_bodega(request):
         "stock_minimo": formatear_cantidad(producto.stock_minimo),
         "nivel": nivel.value,
         "nivel_texto": nivel.label,
+        "controla_merma": producto.controla_merma,  # D-33: aviso en el formulario de entrada
     })
 
 

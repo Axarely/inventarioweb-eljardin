@@ -35,6 +35,14 @@ class EntradaForm(FormularioBootstrapMixin, forms.Form):  # RF-02, RF-11 (Fig. 1
         self.fields["proveedor"].queryset = proveedores_activos()
 
 
+class PesoRealForm(FormularioBootstrapMixin, forms.Form):  # D-33: segunda entrada de proteínas
+    control = forms.IntegerField(widget=forms.HiddenInput)
+    peso_real = forms.DecimalField(
+        label="Peso real", max_digits=10, decimal_places=2, min_value=Decimal("0"),
+        widget=forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "0.00"}),
+    )
+
+
 class ConsumoForm(FormularioBootstrapMixin, forms.Form):  # RF-07 (D-02): consumo de la sucursal
     producto = _campo_producto()
     cantidad = _campo_cantidad("Cantidad consumida")

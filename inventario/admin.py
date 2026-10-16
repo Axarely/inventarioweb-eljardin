@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Bodega, Existencia, MovimientoInventario, Sucursal
+from .models import Bodega, ControlMerma, Existencia, MovimientoInventario, Sucursal
 
 
 @admin.register(Bodega)
@@ -30,6 +30,12 @@ class SoloLecturaAdmin(admin.ModelAdmin):
 class ExistenciaAdmin(SoloLecturaAdmin):
     list_display = ("producto", "ubicacion", "cantidad", "actualizado_en")
     list_filter = ("ubicacion",)
+
+
+@admin.register(ControlMerma)
+class ControlMermaAdmin(SoloLecturaAdmin):
+    list_display = ("entrada", "estado", "peso_real", "merma", "procesado_por", "procesado_en")
+    list_filter = ("estado",)
 
 
 @admin.register(MovimientoInventario)

@@ -188,6 +188,7 @@ class MovimientoInventario(models.Model):
     class Tipo(models.TextChoices):
         ENTRADA = "entrada", "Entrada"
         SALIDA = "salida", "Salida"
+        MERMA = "merma", "Merma"  # D-33
 
     TIPO = None
 
@@ -283,6 +284,11 @@ class MovimientoInventario(models.Model):
             self.anulado_por = usuario
             self.anulado_en = timezone.now()
             self.save(update_fields=["anulado", "motivo_anulacion", "anulado_por", "anulado_en"])
+            # D-33: anular la merma reabre su control para volver a registrar el peso real.
+            ControlMerma.objects.filter(movimiento_merma_id=self.pk).update(
+                estado=ControlMerma.Estado.PENDIENTE, peso_real=None, merma=None, movimiento_merma=None,
+                procesado_por=None, procesado_en=None,
+            )
         return self
 
     def _validar_comunes(self):
@@ -352,6 +358,80 @@ class SalidaInventario(MovimientoInventario):
             if self.destino:
                 existencias[self.destino.pk].actualizar_cantidad(self.cantidad)
         return self
+
+
+class MermaInventario(MovimientoInventario):
+    """
+    D-33: pérdida de peso al limpiar o preparar una proteína en producción. Sale de la bodega y no va a
+    ninguna parte (destino = null). No es consumo de sucursal: los reportes de consumo no la cuentan.
+    """
+
+    TIPO = MovimientoInventario.Tipo.MERMA
+
+    class Meta:
+        verbose_name = "merma de inventario"
+        verbose_name_plural = "mermas de inventario"
+
+    def aplicar(self):  # D-33, RNF-08
+        self._validar_comunes()
+        if self.origen is None or not self.origen.es_bodega or self.destino_id is not None:
+            raise MovimientoInvalido("La merma se descuenta de la bodega y no tiene destino.")
+        with transaction.atomic():
+            existencia = Existencia.bloquear(self.producto, self.origen)
+            if existencia.cantidad < self.cantidad:
+                raise ExistenciaInsuficiente(existencia.cantidad, self.producto.unidad_medida, self.origen)
+            self.save()
+            existencia.actualizar_cantidad(-self.cantidad)
+        return self
+
+
+class ControlMerma(models.Model):
+    """
+    D-33: control interno de merma de proteínas. Primera entrada = peso bruto que entrega el proveedor
+    (EntradaInventario). Segunda entrada = peso real después de limpieza o preparación en producción.
+    Merma = bruto - real, registrada como MermaInventario para que la existencia quede en el peso real.
+    """
+
+    class Estado(models.TextChoices):
+        PENDIENTE = "pendiente", "Pendiente de peso real"
+        PROCESADO = "procesado", "Procesado"
+
+    entrada = models.OneToOneField(EntradaInventario, on_delete=models.PROTECT, related_name="control_merma")
+    estado = models.CharField("estado", max_length=10, choices=Estado.choices, default=Estado.PENDIENTE)
+    peso_real = models.DecimalField(
+        "peso real", max_digits=10, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)]
+    )
+    merma = models.DecimalField("merma", max_digits=10, decimal_places=2, null=True, blank=True)
+    movimiento_merma = models.OneToOneField(
+        MermaInventario, on_delete=models.PROTECT, null=True, blank=True, related_name="control_merma"
+    )
+    procesado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="controles_merma"
+    )
+    procesado_en = models.DateTimeField("procesado en", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "control de merma"
+        verbose_name_plural = "controles de merma"
+        ordering = ["-entrada__fecha"]
+        permissions = [
+            ("registrar_peso_real", "Registrar el peso real (merma) de proteínas"),
+            ("ver_control_merma", "Consultar el control de merma"),
+        ]
+
+    def __str__(self):
+        return f"Merma de {self.entrada.producto} ({self.get_estado_display().lower()})"
+
+    @property
+    def peso_bruto(self):
+        return self.entrada.cantidad
+
+    @property
+    def rendimiento(self):
+        """Porcentaje del peso bruto que quedó utilizable."""
+        if self.peso_real is None or not self.peso_bruto:
+            return None
+        return (self.peso_real / self.peso_bruto * 100).quantize(Decimal("0.1"))
 
 
 class DiscrepanciaInventario(models.Model):

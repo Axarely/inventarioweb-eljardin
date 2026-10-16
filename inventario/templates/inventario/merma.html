@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load inventario_extras %}
+{% block titulo %}Merma — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# D-33: segunda entrada de proteínas (peso real tras limpieza/preparación) y control interno de merma #}
+<h1 class="h4 titulo-primario mb-1">Merma de proteínas</h1>
+<p class="text-muted small">
+  1.ª entrada: lo que entrega el proveedor (en <strong>Entradas</strong>). 2.ª entrada: el peso real después de
+  limpiar o preparar en producción (aquí). La diferencia es la <strong>merma</strong> y se descuenta de la bodega.
+</p>
+
+<form method="get" class="row g-2 mb-3 align-items-end" style="max-width: 44rem">
+  <div class="col-sm-5">
+    <label class="form-label small" for="producto">Producto</label>
+    <select id="producto" name="producto" class="form-select">
+      <option value="">Todos</option>
+      {% for p in productos %}<option value="{{ p.pk }}" {% if request.GET.producto == p.pk|stringformat:"d" %}selected{% endif %}>{{ p.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-sm-5">
+    <label class="form-label small" for="proveedor">Proveedor</label>
+    <select id="proveedor" name="proveedor" class="form-select">
+      <option value="">Todos</option>
+      {% for p in proveedores %}<option value="{{ p.pk }}" {% if request.GET.proveedor == p.pk|stringformat:"d" %}selected{% endif %}>{{ p.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-sm-2"><button class="btn btn-secundario w-100" type="submit">Filtrar</button></div>
+</form>
+
+<div class="card mb-4"><div class="card-body">
+  <h2 class="h6">Pendientes de registrar el peso real <span class="pill pill-bajo ms-1">{{ pendientes|length }}</span></h2>
+  <div class="table-responsive">
+  <table class="table table-sm align-middle mb-0">
+    <thead class="table-light"><tr><th>Recibido</th><th>Producto</th><th>Proveedor</th><th class="text-end">Peso del proveedor</th><th>{% if puede_registrar %}Peso real{% endif %}</th></tr></thead>
+    <tbody>
+    {% for c in pendientes %}
+      <tr>
+        <td class="text-nowrap">{{ c.entrada.fecha|date:"d/m/Y H:i" }}</td>
+        <td>{{ c.entrada.producto.nombre }}</td>
+        <td>{{ c.entrada.proveedor }}</td>
+        <td class="text-end">{{ c.entrada.cantidad|cantidad }} {{ c.entrada.producto.unidad_medida }}</td>
+        <td>
+          {% if puede_registrar %}
+          <form method="post" class="d-flex gap-2 align-items-center">{% csrf_token %}
+            <input type="hidden" name="control" value="{{ c.pk }}">
+            <label class="visually-hidden" for="peso-{{ c.pk }}">Peso real de {{ c.entrada.producto.nombre }}</label>
+            <input type="number" id="peso-{{ c.pk }}" name="peso_real" class="form-control form-control-sm" style="max-width: 8rem"
+                   step="0.01" min="0" max="{{ c.entrada.cantidad|cantidad }}" placeholder="0.00" required>
+            <span class="small">{{ c.entrada.producto.unidad_medida }}</span>
+            <button type="submit" class="btn btn-sm btn-primario">Registrar</button>
+          </form>
+          {% else %}<span class="pill pill-bajo">Pendiente</span>{% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5" class="text-muted">No hay entradas de proteínas pendientes.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div></div>
+
+<div class="card mb-4"><div class="card-body">
+  <h2 class="h6">Control interno: merma por producto</h2>
+  <div class="table-responsive">
+  <table class="table table-sm align-middle mb-0">
+    <thead class="table-light"><tr><th>Producto</th><th class="text-end">Recepciones</th><th class="text-end">Entregado por proveedor</th><th class="text-end">Peso real</th><th class="text-end">Merma</th><th class="text-end">Rendimiento</th></tr></thead>
+    <tbody>
+    {% for r in resumen %}
+      <tr>
+        <td>{{ r.producto }}</td>
+        <td class="text-end">{{ r.recepciones }}</td>
+        <td class="text-end">{{ r.bruto|cantidad }} {{ r.unidad }}</td>
+        <td class="text-end">{{ r.real|cantidad }} {{ r.unidad }}</td>
+        <td class="text-end">{{ r.merma|cantidad }} {{ r.unidad }}</td>
+        <td class="text-end"><strong>{{ r.rendimiento }} %</strong></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="text-muted">Todavía no hay pesos reales registrados.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div></div>
+
+<div class="card"><div class="card-body">
+  <h2 class="h6">Detalle de recepciones procesadas (últimas 50)</h2>
+  <div class="table-responsive">
+  <table class="table table-sm align-middle mb-0 small">
+    <thead class="table-light"><tr><th>Recibido</th><th>Procesado</th><th>Producto</th><th>Proveedor</th><th class="text-end">Proveedor</th><th class="text-end">Real</th><th class="text-end">Merma</th><th class="text-end">Rend.</th><th>Registró</th></tr></thead>
+    <tbody>
+    {% for c in procesados %}
+      <tr>
+        <td class="text-nowrap">{{ c.entrada.fecha|date:"d/m/Y" }}</td>
+        <td class="text-nowrap">{{ c.procesado_en|date:"d/m/Y H:i" }}</td>
+        <td>{{ c.entrada.producto.nombre }}</td>
+        <td>{{ c.entrada.proveedor }}</td>
+        <td class="text-end">{{ c.entrada.cantidad|cantidad }}</td>
+        <td class="text-end">{{ c.peso_real|cantidad }}</td>
+        <td class="text-end">{{ c.merma|cantidad }} {{ c.entrada.producto.unidad_medida }}</td>
+        <td class="text-end">{{ c.rendimiento }} %</td>
+        <td>{{ c.procesado_por.nombre }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="9" class="text-muted">Sin registros.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div></div>
+{% endblock %}

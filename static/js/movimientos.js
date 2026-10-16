@@ -12,6 +12,7 @@
   const elCantidad = document.getElementById("panel-cantidad");
   const elMinimo = document.getElementById("panel-minimo");
   const elPill = document.getElementById("panel-pill");
+  const elMerma = document.getElementById("panel-merma");
   let disponible = null;
 
   function pill(nivel, texto) {
@@ -34,6 +35,7 @@
   async function actualizar() {
     disponible = null;
     elPill.replaceChildren();
+    if (elMerma) elMerma.hidden = true;
     if (!selProducto.value) {
       elCantidad.textContent = "—";
       elMinimo.textContent = "Seleccione un producto.";
@@ -55,6 +57,7 @@
         revisarCantidad();
       } else {
         elPill.replaceChildren(pill(d.nivel, "Stock " + d.nivel_texto));
+        if (elMerma) elMerma.hidden = !d.controla_merma; // D-33
       }
     } catch (e) {
       elCantidad.textContent = "—";

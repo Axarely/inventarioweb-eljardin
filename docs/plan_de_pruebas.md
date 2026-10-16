@@ -7,6 +7,7 @@
 | Versión | Fecha | Cambios | Autor |
 |---|---|---|---|
 | 1.0 | 2026-10-11 | Versión inicial: estrategia, herramientas, ambiente, criterios de aceptación de los RF de prioridad Alta. | A. Escobar |
+| 1.1 | 2026-10-15 | CP-RF16-01 precisa "un correo por dueño activo" (D-22). Sin otros cambios de alcance. | A. Escobar |
 
 ---
 
@@ -312,7 +313,7 @@ prueba verificables. Columnas: **ID** · **Nivel** (U = unitaria, I = integraci�
 
 | ID | Nivel | Escenario | Tipo | Prueba prevista |
 |---|---|---|---|---|
-| CP-RF16-01 | I | Dados 2 dueños activos y 1 inactivo, cuando una existencia pasa a Agotado, entonces se envía 1 correo (`mailoutbox`) a los 2 dueños activos, con el producto, la ubicación y la fecha en el cuerpo. | + | `test_rf16_correo_a_duenos_al_agotarse` |
+| CP-RF16-01 | I | Dados 2 dueños activos y 1 inactivo, cuando una existencia pasa a Agotado, entonces se envía un correo (`mailoutbox`) a cada uno de los 2 dueños activos y ninguno al inactivo, con el producto, la ubicación y la fecha en el cuerpo. *(v1.1: se precisa "un correo por dueño", porque `INotificador.enviar(destinatario, mensaje)` recibe un solo destinatario; ver D-22.)* | + | `test_rf16_correo_a_duenos_al_agotarse` |
 | CP-RF16-02 | I | Cuando la existencia pasa solo a "Bajo", entonces se crea la alerta (RF-06) pero **no** se envía correo. | − | `test_rf16_sin_correo_si_solo_bajo` |
 | CP-RF16-03 | I | Dada una alerta *agotado* ya pendiente, cuando ocurre otro movimiento sobre esa existencia (sigue en 0), entonces no se envía un segundo correo. | − | `test_rf16_no_reenvia_si_alerta_pendiente` |
 | CP-RF16-04 | I | Cuando el servidor SMTP falla (`INotificador` simulado que lanza una excepción), entonces el movimiento y la alerta **sí** se guardan y el error queda en el log: la notificación no revierte la operación. | − | `test_rf16_fallo_smtp_no_revierte_movimiento` |

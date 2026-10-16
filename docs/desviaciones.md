@@ -31,6 +31,21 @@ implementa).
 | D-14 | 2026-10-11 | Interpretación | El rol Bodeguero tiene el permiso `add_producto` (sin opción de menú): puede crear un producto desde el formulario de entrada. | UC02, flujo alternativo A1: "Producto no existe en catálogo: el sistema permite crearlo antes de continuar". El resto del catálogo (listar, editar, desactivar) sigue siendo solo del Dueño. | Bajo. | RF-02, RF-09 |
 | D-15 | 2026-10-11 | Interpretación | Las entradas siempre van a la bodega central (`Bodega.central()`). | La interfaz `IInventario.registrar_entrada(producto_id, cantidad, proveedor_id, usuario_id)` no recibe la bodega, y el DEDS 1.1 describe una única bodega central. | Bajo: si en el futuro hubiera más bodegas, se agregaría el parámetro. | RF-02 |
 
+### Sprint 2
+
+| ID | Fecha | Tipo | Qué cambia | Por qué | Impacto | RF/RNF |
+|---|---|---|---|---|---|---|
+| D-16 | 2026-10-15 | Adición | `AlertaInventario.atendida_por` y `atendida_en`. | La interfaz `IAlertas.marcar_atendida(alerta_id, usuario_id)` recibe el usuario, y la Fig. 12 no tiene dónde guardarlo. | Bajo: dos campos nullables. | RF-06 |
+| D-17 | 2026-10-15 | Interpretación | La lista de observadores de `Existencia` es **de clase** (compartida por todas las instancias). | Cada consulta del ORM crea instancias nuevas de `Existencia`, así que una lista por instancia se perdería. Los observadores se registran una vez en `AppConfig.ready()`, como pide el diseño. | Ninguno funcional; los métodos y sus nombres son los de la Fig. 12 y 23. | RF-06, RF-17 |
+| D-18 | 2026-10-15 | Interpretación | "Editar" un movimiento (RF-15) = **anular** el original con su motivo y registrar uno nuevo que lo **reemplaza**, en una transacción. | Modificar la cantidad en el mismo registro borraría la trazabilidad que el DEDS protege ("queda marcado como anulado en el historial, sin eliminarse"). | Bajo: el historial muestra "Corrige al #N". | RF-15, RF-12 |
+| D-19 | 2026-10-15 | Adición | `MovimientoInventario.anulado_por`, `anulado_en` y `reemplaza_a`. | Trazabilidad de quién anuló, cuándo, y qué movimiento corrige a cuál (D-18). | Bajo: campos nullables. | RF-15 |
+| D-20 | 2026-10-15 | Tecnología | Exportación con **openpyxl 3.1.5** (Excel) y **ReportLab 5.0.1** (PDF). | El DEDS exige "PDF o Excel" (RF-14) sin fijar librería. Ambas son puro Python, libres y no necesitan binarios del sistema (Render). | Bajo: dos dependencias en `requirements.txt`. | RF-14 |
+| D-21 | 2026-10-15 | Adición | Modelo `EstadoIndicadores` (un solo registro con `version`), que actualiza `PanelIndicadoresService`. | Con varios workers de gunicorn, la caché de un proceso no se entera de los cambios hechos en otro. La versión en la BD invalida los indicadores en todos (RF-17 "sin actualización manual"). | Bajo: una tabla de una fila. | RF-17, RNF-01 |
+| D-22 | 2026-10-15 | Interpretación | El correo de RF-16 se envía **después del commit** (`transaction.on_commit`), uno a cada dueño activo. La alerta se crea dentro de la transacción del movimiento. | Si el movimiento se revierte no debe salir ningún correo, y una caída de SMTP no debe revertir un movimiento válido (CP-RF16-04). `INotificador.enviar(destinatario, mensaje)` recibe un solo destinatario. | Ninguno funcional. | RF-16, RNF-08 |
+| D-23 | 2026-10-15 | Interpretación | Se acepta una sola discrepancia por envío y no modifica las existencias. | El criterio de RF-13 pide solo registro y trazabilidad. El ajuste, si corresponde, se hace anulando o corrigiendo el envío (RF-15). | Bajo. | RF-13 |
+| D-24 | 2026-10-15 | Interpretación | El dashboard muestra los totales y la evolución diaria **solo con un producto filtrado**. Sin filtro muestra la cantidad de registros y el comparativo por producto. | Sumar kg, unidades y paquetes de productos distintos da una cifra sin sentido (el wireframe de la Fig. 14 muestra "1,240 u."). | Bajo: se cumple RF-07/RF-08 con cifras correctas. | RF-07, RF-08 |
+| D-25 | 2026-10-15 | Interpretación | Cualquier movimiento que deje la existencia bajo el umbral genera o actualiza la alerta (también la llegada de un envío insuficiente a una sucursal), no solo las salidas. | RF-06 habla de "un movimiento"; la ficha UC05 menciona la salida como caso típico. | Bajo: más alertas útiles, sin duplicados. | RF-06 |
+
 ## Plantilla para nuevas desviaciones
 
 ```

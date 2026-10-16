@@ -104,6 +104,16 @@ tests/           pruebas transversales (humo)
 docs/            DEDS, consigna, plan de pruebas, backlog, ajustes, desviaciones, registro de tiempo
 ```
 
+## Despliegue (Render)
+
+`render.yaml` crea el servicio web (Gunicorn + WhiteNoise) y la base PostgreSQL 16; `build.sh` instala,
+ejecuta `collectstatic` y `migrate`. En producción se usa `config.settings.prod`: HTTPS obligatorio, cookies
+seguras, HSTS. Paso a paso, variables de entorno y riesgos del plan gratuito en
+[docs/manual_despliegue.md](docs/manual_despliegue.md).
+
+Para medir el rendimiento (RNF-01) con volumen: `python manage.py seed_volumen` (después de `seed_demo`,
+idealmente en una base de datos aparte).
+
 ## Documentación del proyecto
 
 - [docs/plan_de_pruebas.md](docs/plan_de_pruebas.md): estrategia, herramientas y criterios de aceptación
@@ -114,3 +124,7 @@ docs/            DEDS, consigna, plan de pruebas, backlog, ajustes, desviaciones
 - [docs/revision_codigo.md](docs/revision_codigo.md): revisión técnica formal del Sprint 1
 - [docs/bitacora_defectos.md](docs/bitacora_defectos.md): defectos encontrados al probar (SQA)
 - [docs/mapeo_componentes.md](docs/mapeo_componentes.md): componentes del DEDS → código y evidencia de patrones
+- [docs/pruebas_sistema.md](docs/pruebas_sistema.md): pruebas de sistema y RNF con mediciones reales
+- [docs/checklist_aceptacion.md](docs/checklist_aceptacion.md): aceptación de RF-01..RF-18 (con espacio para capturas)
+- [docs/manual_despliegue.md](docs/manual_despliegue.md) y [docs/manual_usuario.md](docs/manual_usuario.md)
+- [docs/metricas.md](docs/metricas.md): estimado vs. real, riesgos y desviaciones

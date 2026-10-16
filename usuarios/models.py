@@ -52,6 +52,10 @@ class UsuarioManager(BaseUserManager):
         usuario.save(using=self._db)
         return usuario
 
+    def solicitudes_pendientes(self):
+        """D-31: cuentas creadas con el autorregistro que ningún dueño aprobó todavía."""
+        return self.filter(activo=False, rol__isnull=True, last_login__isnull=True, is_superuser=False)
+
     def create_superuser(self, correo, password=None, **campos):
         campos.setdefault("is_staff", True)
         campos.setdefault("is_superuser", True)
@@ -108,6 +112,11 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     def esta_bloqueado(self, ahora=None):
         return self.bloqueado_hasta is not None and self.bloqueado_hasta > (ahora or timezone.now())
+
+    @property
+    def es_solicitud_pendiente(self):
+        """D-31: misma condición que UsuarioManager.solicitudes_pendientes()."""
+        return not self.activo and self.rol_id is None and self.last_login is None and not self.is_superuser
 
     @property
     def es_encargado(self):

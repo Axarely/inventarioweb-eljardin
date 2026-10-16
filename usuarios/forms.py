@@ -12,7 +12,8 @@ from .roles import APPS_CON_PERMISOS
 class UsuarioBaseForm(FormularioBootstrapMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["rol"].required = True  # R-06: todo usuario creado desde la interfaz tiene rol
+        if "rol" in self.fields:
+            self.fields["rol"].required = True  # R-06: todo usuario creado por un dueño tiene rol
 
     def clean_correo(self):
         correo = self.cleaned_data["correo"].lower()
@@ -49,6 +50,21 @@ class UsuarioCrearForm(UsuarioBaseForm):  # RF-10
     def save(self, commit=True):
         usuario = super().save(commit=False)
         usuario.set_password(self.cleaned_data["password1"])  # RNF-02: hash
+        if commit:
+            usuario.save()
+        return usuario
+
+
+class RegistroForm(UsuarioCrearForm):  # D-31: solicitud de cuenta (sin rol, inactiva)
+    class Meta:
+        model = Usuario
+        fields = ["nombre", "correo"]
+        labels = {"nombre": "Nombre completo", "correo": "Correo electrónico"}
+
+    def save(self, commit=True):
+        usuario = super().save(commit=False)
+        usuario.activo = False  # mínimo privilegio: no entra hasta que un dueño apruebe y asigne el rol
+        usuario.rol = None
         if commit:
             usuario.save()
         return usuario

@@ -24,11 +24,20 @@ class UsuarioListView(PermisoRequeridoMixin, ListView):  # RF-10
     paginate_by = 25
 
     def get_queryset(self):
-        usuarios = Usuario.objects.select_related("rol", "sucursal")
+        if self.request.GET.get("estado") == "pendientes":  # D-31
+            usuarios = Usuario.objects.solicitudes_pendientes().select_related("rol", "sucursal")
+        else:
+            usuarios = Usuario.objects.select_related("rol", "sucursal")
         texto = self.request.GET.get("q", "").strip()
         if texto:
             usuarios = usuarios.filter(Q(nombre__icontains=texto) | Q(correo__icontains=texto))
         return usuarios
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["pendientes"] = Usuario.objects.solicitudes_pendientes().count()
+        contexto["solo_pendientes"] = self.request.GET.get("estado") == "pendientes"
+        return contexto
 
 
 class UsuarioCrearView(PermisoRequeridoMixin, FormularioMixin, CreateView):  # RF-10
@@ -49,6 +58,17 @@ class UsuarioEditarView(PermisoRequeridoMixin, FormularioMixin, UpdateView):  # 
     titulo = "Editar usuario"
     success_url = reverse_lazy("usuarios:usuarios")
 
+    def get_initial(self):
+        inicial = super().get_initial()
+        if self.request.GET.get("aprobar"):  # D-31: aprobar una solicitud = activar y asignar rol
+            inicial["activo"] = True
+        return inicial
+
+    def get_context_data(self, **kwargs):
+        if self.request.GET.get("aprobar"):
+            self.titulo = f"Aprobar solicitud de {self.object.nombre}: asigne un rol"
+        return super().get_context_data(**kwargs)
+
     def form_valid(self, form):
         if form.instance.pk == self.request.user.pk:
             # R-03: evita que el dueño se deje a sí mismo sin acceso a la administración.
@@ -60,6 +80,17 @@ class UsuarioEditarView(PermisoRequeridoMixin, FormularioMixin, UpdateView):  # 
                 return self.form_invalid(form)
         messages.success(self.request, f"Usuario «{form.instance.nombre}» actualizado.")
         return super().form_valid(form)
+
+
+class UsuarioRechazarView(PermisoRequeridoMixin, View):  # D-31: solo solicitudes nunca aprobadas
+    permission_required = "usuarios.change_usuario"
+
+    def post(self, request, pk):
+        solicitud = get_object_or_404(Usuario.objects.solicitudes_pendientes(), pk=pk)
+        nombre = solicitud.nombre
+        solicitud.delete()  # no tiene rol, nunca entró ni registró movimientos
+        messages.success(request, f"Solicitud de «{nombre}» rechazada.")
+        return redirect(f"{reverse('usuarios:usuarios')}?estado=pendientes")
 
 
 class UsuarioPasswordView(PermisoRequeridoMixin, FormularioMixin, FormView):  # RF-10, D-05
@@ -93,6 +124,8 @@ class UsuarioActivarView(PermisoRequeridoMixin, View):  # RF-10: desactivar en l
         usuario = get_object_or_404(Usuario, pk=pk)
         if usuario.pk == request.user.pk:
             messages.error(request, "No puede desactivar su propia cuenta.")
+        elif usuario.es_solicitud_pendiente:  # D-31: se aprueba asignando rol, no solo activando
+            messages.error(request, f"Para aprobar a «{usuario.nombre}» asígnele un rol con «Aprobar».")
         else:
             usuario.activo = not usuario.activo
             usuario.save(update_fields=["activo"])

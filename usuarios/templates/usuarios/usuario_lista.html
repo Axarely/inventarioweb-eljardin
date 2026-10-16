@@ -2,6 +2,11 @@
 {% block titulo %}Usuarios — InventarioWeb El Jardín{% endblock %}
 {% block contenido %}
 <h1 class="h4 titulo-primario">Usuarios</h1>
+<ul class="nav nav-pills mb-3">
+  <li class="nav-item"><a class="nav-link{% if not solo_pendientes %} active{% endif %}" href="{% url 'usuarios:usuarios' %}">Todos</a></li>
+  <li class="nav-item"><a class="nav-link{% if solo_pendientes %} active{% endif %}" href="?estado=pendientes">Solicitudes de acceso{% if pendientes %} <span class="insignia ms-1">{{ pendientes }}</span>{% endif %}</a></li>
+</ul>
+{% if solo_pendientes %}<p class="small text-muted">Personas que se registraron desde la pantalla de acceso. Para aprobar, asigne un rol (y la sucursal si es encargado).</p>{% endif %}
 <div class="d-flex flex-wrap gap-2 align-items-end mb-3">
   <form method="get" class="d-flex gap-2 flex-grow-1" style="max-width: 32rem">
     <input type="search" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Buscar por nombre o correo…" aria-label="Buscar usuario">
@@ -19,9 +24,14 @@
       <td>{{ u.correo }}</td>
       <td>{{ u.rol|default:"—" }}</td>
       <td>{{ u.sucursal|default:"—" }}</td>
-      <td>{% if u.activo %}<span class="pill pill-normal">Activo</span>{% else %}<span class="pill pill-inactivo">Inactivo</span>{% endif %}</td>
+      <td>{% if u.activo %}<span class="pill pill-normal">Activo</span>{% elif u.es_solicitud_pendiente %}<span class="pill pill-bajo">Solicitud</span>{% else %}<span class="pill pill-inactivo">Inactivo</span>{% endif %}</td>
       <td class="text-end text-nowrap">
-        {% if perms.usuarios.change_usuario %}
+        {% if perms.usuarios.change_usuario and u.es_solicitud_pendiente %}
+          <a class="btn btn-sm btn-primario" href="{% url 'usuarios:usuario_editar' u.pk %}?aprobar=1">Aprobar</a>
+          <form method="post" action="{% url 'usuarios:usuario_rechazar' u.pk %}" class="d-inline">{% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger" type="submit">Rechazar</button>
+          </form>
+        {% elif perms.usuarios.change_usuario %}
           <a class="btn btn-sm btn-secundario" href="{% url 'usuarios:usuario_editar' u.pk %}">Editar</a>
           <a class="btn btn-sm btn-secundario" href="{% url 'usuarios:usuario_password' u.pk %}">Contraseña</a>
           {% if u.pk != user.pk %}

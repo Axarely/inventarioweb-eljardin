@@ -1,0 +1,27 @@
+{% extends "autenticacion/_acceso.html" %}
+{% block titulo %}Solicitar acceso — InventarioWeb El Jardín{% endblock %}
+{% block cambio %}
+  <a class="acceso-cambio" href="{% url 'autenticacion:login' %}">
+    <span>¿Ya tiene cuenta?</span><strong>Iniciar sesión <span aria-hidden="true">›</span></strong>
+  </a>
+{% endblock %}
+{% block titulo_panel %}Solicitar acceso{% endblock %}
+{% block formulario %}
+  <p class="acceso-ayuda">Un dueño revisará su solicitud y le asignará su rol (bodeguero o encargado de sucursal).</p>
+  {% for error in form.non_field_errors %}
+    <div class="alert alert-danger small" role="alert">{{ error }}</div>
+  {% endfor %}
+  <form method="post" novalidate>{% csrf_token %}
+    {% for campo in form %}
+      <label for="{{ campo.id_for_label }}" class="acceso-label">{{ campo.label }}</label>
+      <input type="{% if 'password' in campo.name %}password{% elif campo.name == 'correo' %}email{% else %}text{% endif %}"
+             name="{{ campo.html_name }}" id="{{ campo.id_for_label }}" class="acceso-input{% if campo.errors %} es-invalido{% endif %}"
+             {% if 'password' not in campo.name %}value="{{ campo.value|default:'' }}"{% endif %}
+             autocomplete="{% if campo.name == 'nombre' %}name{% elif campo.name == 'correo' %}email{% else %}new-password{% endif %}"
+             {% if campo.errors %}aria-invalid="true" aria-describedby="{{ campo.id_for_label }}-error"{% endif %} required>
+      {% if campo.errors %}<div class="acceso-error" id="{{ campo.id_for_label }}-error">{{ campo.errors|join:" " }}</div>{% endif %}
+    {% endfor %}
+    <button type="submit" class="acceso-boton">Enviar solicitud</button>
+  </form>
+  <p class="acceso-pie d-md-none">¿Ya tiene cuenta? <a href="{% url 'autenticacion:login' %}">Iniciar sesión</a></p>
+{% endblock %}

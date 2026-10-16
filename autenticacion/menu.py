@@ -7,6 +7,7 @@ la oculta. El orden produce:
 - Encargado: Inicio, Existencias, Reportar consumo, Reportar discrepancia
 - Dueño: Dashboard, Alertas, Existencias, Catálogo, Usuarios, Roles, Proveedores, Reportes, Historial
 """
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 DASHBOARD = "reportes.ver_dashboard"
@@ -49,5 +50,11 @@ def menu(request):
     for etiqueta, nombre_url in opciones_para(usuario):
         url = reverse(nombre_url)
         activo = request.path == url if url == "/" else request.path.startswith(url)
-        items.append({"etiqueta": etiqueta, "url": url, "activo": activo})
+        item = {"etiqueta": etiqueta, "url": url, "activo": activo}
+        if nombre_url == "usuarios:usuarios" and usuario.has_perm("usuarios.change_usuario"):
+            # D-31: solicitudes de cuenta esperando aprobación de un dueño
+            pendientes = get_user_model().objects.solicitudes_pendientes().count()
+            if pendientes:
+                item.update(insignia=pendientes, insignia_texto="solicitudes pendientes de aprobación")
+        items.append(item)
     return {"menu": items}

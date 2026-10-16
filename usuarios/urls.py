@@ -10,6 +10,7 @@ urlpatterns = [
     path("usuarios/<int:pk>/editar/", views.UsuarioEditarView.as_view(), name="usuario_editar"),
     path("usuarios/<int:pk>/password/", views.UsuarioPasswordView.as_view(), name="usuario_password"),
     path("usuarios/<int:pk>/activar/", views.UsuarioActivarView.as_view(), name="usuario_activar"),
+    path("usuarios/<int:pk>/rechazar/", views.UsuarioRechazarView.as_view(), name="usuario_rechazar"),
     path("roles/", views.RolListView.as_view(), name="roles"),
     path("roles/nuevo/", views.RolCrearView.as_view(), name="rol_crear"),
     path("roles/<int:pk>/editar/", views.RolEditarView.as_view(), name="rol_editar"),

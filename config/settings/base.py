@@ -118,3 +118,13 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="InventarioWeb El Jardín <no-reply@localhost>")
+
+# Patrón Adapter (DEDS 3.4): canal de notificación de RF-16. La v1 usa correo (DEDS 3.1).
+NOTIFICADOR = env("NOTIFICADOR", default="alertas.notificadores.AdaptadorCorreoSMTP")
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"consola": {"class": "logging.StreamHandler"}},
+    "loggers": {"alertas": {"handlers": ["consola"], "level": "INFO"}},
+}

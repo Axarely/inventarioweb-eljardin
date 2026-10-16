@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Alertas — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# Wireframe Fig. 18 — UC05 Alertas de bajo inventario (RF-06) #}
+<h1 class="h4 titulo-primario">Alertas {% if estado == "pendiente" %}activas{% elif estado == "atendida" %}atendidas{% endif %}</h1>
+<ul class="nav nav-pills mb-3">
+  <li class="nav-item"><a class="nav-link{% if estado == 'pendiente' %} active{% endif %}" href="?estado=pendiente">Pendientes</a></li>
+  <li class="nav-item"><a class="nav-link{% if estado == 'atendida' %} active{% endif %}" href="?estado=atendida">Atendidas</a></li>
+  <li class="nav-item"><a class="nav-link{% if estado == 'todas' %} active{% endif %}" href="?estado=todas">Todas</a></li>
+</ul>
+{% for alerta in alertas %}
+  <div class="card tarjeta-alerta tarjeta-alerta-{{ alerta.nivel_css }} mb-3">
+    <div class="card-body d-flex flex-wrap align-items-center gap-3">
+      <div class="flex-grow-1">
+        <h2 class="h6 mb-1">{{ alerta.existencia.producto.nombre }}</h2>
+        <div class="small text-muted">{{ alerta.existencia.ubicacion.get_tipo_display }} {{ alerta.existencia.ubicacion.nombre }} · nivel detectado {{ alerta.nivel_detectado_texto }}</div>
+        <div class="small text-muted">Detectada hace {{ alerta.generada_en|timesince }}</div>
+        {% if alerta.estado == "atendida" %}
+          <div class="small text-muted">Atendida por {{ alerta.atendida_por.nombre|default:"—" }} el {{ alerta.atendida_en|date:"d/m/Y H:i" }}</div>
+        {% endif %}
+      </div>
+      <span class="pill pill-{{ alerta.nivel_css }}">{{ alerta.nivel_texto }}</span>
+      {% if alerta.estado == "pendiente" and perms.alertas.marcar_atendida %}
+        <form method="post" action="{% url 'alertas:atendida' alerta.pk %}">{% csrf_token %}
+          <button type="submit" class="btn btn-secundario">Marcar atendida</button>
+        </form>
+      {% elif alerta.estado == "atendida" %}
+        <span class="pill pill-inactivo">Atendida</span>
+      {% endif %}
+    </div>
+  </div>
+{% empty %}
+  <p class="text-muted">No hay alertas {% if estado == "pendiente" %}pendientes{% elif estado == "atendida" %}atendidas{% endif %}.</p>
+{% endfor %}
+{% include "_paginacion.html" %}
+{% endblock %}

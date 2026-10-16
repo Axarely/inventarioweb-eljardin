@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Reportar discrepancia — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# RF-13: diferencia entre lo enviado por bodega y lo recibido en la sucursal #}
+<h1 class="h4 titulo-primario mb-1">Reportar discrepancia</h1>
+<p class="text-muted">Indique cuánto recibió realmente en {{ user.sucursal }} de un envío de la bodega. La discrepancia queda asociada al envío para su trazabilidad; no modifica las existencias.</p>
+<div class="card shadow-sm" style="max-width: 44rem"><div class="card-body">
+  {% if form.fields.movimiento.queryset.exists %}
+  <form method="post" novalidate>{% csrf_token %}
+    {% include "_errores_form.html" %}
+    {% for campo in form %}{% include "_campo.html" %}{% endfor %}
+    <button type="submit" class="btn btn-primario">Registrar discrepancia</button>
+  </form>
+  {% else %}
+    <p class="mb-0 text-muted">No hay envíos recientes pendientes de revisar para su sucursal.</p>
+  {% endif %}
+</div></div>
+{% endblock %}

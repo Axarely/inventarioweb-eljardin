@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Anular movimiento — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# RF-15: anular con justificación; revierte existencias y NO borra el registro #}
+<h1 class="h4 titulo-primario">Anular movimiento</h1>
+<div class="card shadow-sm" style="max-width: 44rem"><div class="card-body">
+  {% include "inventario/_resumen_movimiento.html" %}
+  <div class="alert alert-warning small">Se revertirá el efecto sobre las existencias. El movimiento quedará en el historial marcado como anulado.</div>
+  <form method="post" novalidate>{% csrf_token %}
+    {% include "_errores_form.html" %}
+    {% for campo in form %}{% include "_campo.html" %}{% endfor %}
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-outline-danger">Anular movimiento</button>
+      <a href="{% url 'inventario:historial' %}" class="btn btn-secundario">Cancelar</a>
+    </div>
+  </form>
+</div></div>
+{% endblock %}

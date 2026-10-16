@@ -2,7 +2,7 @@
 {% load inventario_extras %}
 {% block titulo %}Historial — InventarioWeb El Jardín{% endblock %}
 {% block contenido %}
-{# RF-12: lista cronológica con fecha, tipo, cantidad y usuario #}
+{# RF-12: lista cronológica con fecha, tipo, cantidad y usuario. RF-13 y RF-15 visibles por movimiento. #}
 <h1 class="h4 titulo-primario">Historial de movimientos</h1>
 <form method="get" class="row g-2 mb-3 align-items-end" style="max-width: 48rem">
   <div class="col-sm-5">
@@ -24,23 +24,45 @@
 <div class="table-responsive">
 <table class="table table-bordered align-middle bg-white small">
   <thead class="table-light">
-    <tr><th>Fecha</th><th>Tipo</th><th>Producto</th><th class="text-end">Cantidad</th><th>Origen</th><th>Destino</th><th>Proveedor</th><th>Usuario</th><th>Estado</th></tr>
+    <tr><th>#</th><th>Fecha</th><th>Tipo</th><th>Producto</th><th class="text-end">Cantidad</th><th>Origen</th><th>Destino</th><th>Proveedor</th><th>Usuario</th><th>Estado</th>{% if perms.inventario.anular_movimiento %}<th class="text-end">Acciones</th>{% endif %}</tr>
   </thead>
   <tbody>
   {% for m in movimientos %}
-    <tr>
+    <tr{% if m.anulado %} class="text-muted"{% endif %}>
+      <td>{{ m.pk }}</td>
       <td class="text-nowrap">{{ m.fecha|date:"d/m/Y H:i" }}</td>
-      <td>{{ m.get_tipo_display }}</td>
+      <td>{{ m.tipo_texto }}</td>
       <td>{{ m.producto.nombre }}</td>
       <td class="text-end">{{ m.cantidad|cantidad }} {{ m.producto.unidad_medida }}</td>
       <td>{{ m.origen|default:"—" }}</td>
       <td>{{ m.destino|default:"—" }}</td>
       <td>{% if m.tipo == "entrada" %}{{ m.entradainventario.proveedor }}{% else %}—{% endif %}</td>
       <td>{{ m.usuario.nombre }}</td>
-      <td>{% if m.anulado %}<span class="pill pill-inactivo">Anulado</span>{% else %}<span class="pill pill-normal">Vigente</span>{% endif %}</td>
+      <td>
+        {% if m.anulado %}
+          <span class="pill pill-inactivo">Anulado</span>
+          <div class="mt-1">Motivo: {{ m.motivo_anulacion }}{% if m.anulado_por %} ({{ m.anulado_por.nombre }}, {{ m.anulado_en|date:"d/m/Y H:i" }}){% endif %}</div>
+        {% else %}
+          <span class="pill pill-normal">Vigente</span>
+        {% endif %}
+        {% if m.reemplaza_a %}<div class="mt-1">Corrige al #{{ m.reemplaza_a.pk }}</div>{% endif %}
+        {% if m.tipo == "salida" and m.salidainventario.discrepancia %}
+          {% with d=m.salidainventario.discrepancia %}
+          <div class="mt-1"><span class="pill pill-bajo">Discrepancia</span> recibido {{ d.cantidad_recibida|cantidad }} (dif. {{ d.diferencia|cantidad }})</div>
+          {% endwith %}
+        {% endif %}
+      </td>
+      {% if perms.inventario.anular_movimiento %}
+      <td class="text-end text-nowrap">
+        {% if not m.anulado %}
+          <a class="btn btn-sm btn-secundario" href="{% url 'inventario:corregir' m.pk %}">Corregir</a>
+          <a class="btn btn-sm btn-outline-danger" href="{% url 'inventario:anular' m.pk %}">Anular</a>
+        {% endif %}
+      </td>
+      {% endif %}
     </tr>
   {% empty %}
-    <tr><td colspan="9" class="text-muted">No hay movimientos que coincidan.</td></tr>
+    <tr><td colspan="11" class="text-muted">No hay movimientos que coincidan.</td></tr>
   {% endfor %}
   </tbody>
 </table>

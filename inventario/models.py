@@ -11,7 +11,10 @@ from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import Sum
 
-from .excepciones import ExistenciaInsuficiente, MovimientoInvalido
+from django.utils import timezone
+
+from .excepciones import ExistenciaInsuficiente, MovimientoInvalido, formatear_cantidad
+from .observador import IObservadorExistencia
 
 
 class Ubicacion(models.Model):
@@ -83,7 +86,7 @@ class Sucursal(Ubicacion):
 class Existencia(models.Model):
     """
     RF-04: cantidad de un producto en una ubicación. Persistida, no calculada (nota de la Fig. 12,
-    prioriza RNF-01). Solo cambia a través de MovimientoInventario.aplicar().
+    prioriza RNF-01). Solo cambia a través de MovimientoInventario.aplicar() y anular().
     """
 
     class Nivel(models.TextChoices):
@@ -125,21 +128,58 @@ class Existencia(models.Model):
     def esta_bajo_umbral(self):
         return self.cantidad < self.producto.stock_minimo
 
+    # --- Patrón Observer (DEDS 3.4, Fig. 23): Existencia es el sujeto --------------------------
+    # Los observadores se guardan a nivel de clase: cada consulta del ORM crea instancias nuevas de
+    # Existencia, así que una lista por instancia se perdería (D-17).
+    _observadores = []
+
+    @classmethod
+    def agregar_observador(cls, observador):
+        if not isinstance(observador, IObservadorExistencia):
+            raise TypeError("El observador debe implementar IObservadorExistencia.")
+        if not any(type(o) is type(observador) for o in cls._observadores):
+            cls._observadores.append(observador)
+
+    @classmethod
+    def quitar_observador(cls, observador):
+        if observador in cls._observadores:
+            cls._observadores.remove(observador)
+
+    def notificar_observadores(self):
+        for observador in list(type(self)._observadores):
+            observador.actualizar(self)
+
     def actualizar_cantidad(self, delta):
-        """Aplica un delta (positivo o negativo). Sprint 2: aquí se llamará a notificar_observadores()."""
-        nueva = self.cantidad + Decimal(delta)
+        """Aplica un delta (positivo o negativo), persiste y notifica a los observadores (RF-06, RF-17)."""
+        delta = Decimal(delta)
+        nueva = self.cantidad + delta
         if nueva < 0:
             raise ExistenciaInsuficiente(self.cantidad, self.producto.unidad_medida, self.ubicacion)
         if nueva > self.CANTIDAD_MAXIMA:  # R-04: evita un DataError de numeric(10,2)
             raise MovimientoInvalido("La existencia resultante supera el máximo que el sistema puede registrar.")
+        self.nivel_anterior = self.nivel()
+        self.delta = delta
         self.cantidad = nueva
         self.save(update_fields=["cantidad", "actualizado_en"])
+        self.notificar_observadores()
 
     @classmethod
     def bloquear(cls, producto, ubicacion):
         """Obtiene (o crea en 0) la existencia con bloqueo de fila. Requiere transacción abierta (RNF-08)."""
-        existencia, _ = cls.objects.select_for_update().get_or_create(producto=producto, ubicacion=ubicacion)
-        return existencia
+        return cls.bloquear_varias(producto, [ubicacion])[ubicacion.pk]
+
+    @classmethod
+    def bloquear_varias(cls, producto, ubicaciones):
+        """
+        Bloquea las existencias de un producto en varias ubicaciones SIEMPRE en el mismo orden (por id
+        de ubicación), para que dos transacciones concurrentes (p. ej. una salida y una anulación)
+        no se bloqueen mutuamente (deadlock). Devuelve {ubicacion_id: existencia}.
+        """
+        bloqueadas = {}
+        for ubicacion in sorted(ubicaciones, key=lambda u: u.pk):
+            existencia, _ = cls.objects.select_for_update().get_or_create(producto=producto, ubicacion=ubicacion)
+            bloqueadas[ubicacion.pk] = existencia
+        return bloqueadas
 
 
 class MovimientoInventario(models.Model):
@@ -165,7 +205,17 @@ class MovimientoInventario(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="movimientos")
     fecha = models.DateTimeField("fecha", auto_now_add=True, db_index=True)
     anulado = models.BooleanField("anulado", default=False)
-    motivo_anulacion = models.TextField("motivo de anulación", blank=True)  # D-04, RF-15 (Sprint 2)
+    motivo_anulacion = models.TextField("motivo de anulación", blank=True)  # D-04, RF-15
+    # D-19: trazabilidad de la anulación y de la corrección (RF-15 "editar" = anular + reemplazar).
+    anulado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="anulaciones"
+    )
+    anulado_en = models.DateTimeField("anulado en", null=True, blank=True)
+    reemplaza_a = models.OneToOneField(
+        "self", on_delete=models.PROTECT, null=True, blank=True, related_name="reemplazado_por"
+    )
+
+    MOTIVO_MINIMO = 5
 
     class Meta:
         verbose_name = "movimiento de inventario"
@@ -177,19 +227,63 @@ class MovimientoInventario(models.Model):
         permissions = [
             ("registrar_entrada", "Registrar entradas de mercadería"),
             ("registrar_salida", "Registrar salidas hacia sucursal"),
+            ("reportar_consumo", "Reportar consumo de su sucursal"),
+            ("anular_movimiento", "Anular o corregir movimientos con justificación"),
             ("ver_historial", "Consultar historial de movimientos"),
         ]
 
     def __str__(self):
-        return f"{self.get_tipo_display()} de {self.cantidad} {self.producto}"
+        return f"{self.tipo_texto} de {formatear_cantidad(self.cantidad)} {self.producto}"
 
     def save(self, *args, **kwargs):
         if self.TIPO:
             self.tipo = self.TIPO
         super().save(*args, **kwargs)
 
+    @property
+    def es_consumo(self):
+        """D-02: el consumo de sucursal es una salida con origen = sucursal y sin destino."""
+        return self.tipo == self.Tipo.SALIDA and self.destino_id is None
+
+    @property
+    def tipo_texto(self):
+        return "Consumo" if self.es_consumo else self.get_tipo_display()
+
     def aplicar(self):
         raise NotImplementedError("Cada subclase define cómo afecta las existencias.")
+
+    def anular(self, motivo, usuario=None):  # RF-15
+        """
+        Revierte el efecto del movimiento sobre las existencias y lo marca como anulado.
+        No borra el registro: queda en el historial con su motivo (criterio de aceptación RF-15).
+        """
+        motivo = (motivo or "").strip()
+        if len(motivo) < self.MOTIVO_MINIMO:
+            raise MovimientoInvalido(
+                f"Indique el motivo de la anulación (mínimo {self.MOTIVO_MINIMO} caracteres)."
+            )
+        with transaction.atomic():
+            actual = MovimientoInventario.objects.select_for_update().get(pk=self.pk)
+            if actual.anulado:
+                raise MovimientoInvalido("El movimiento ya está anulado.")
+            ubicaciones = [u for u in (self.origen, self.destino) if u is not None]
+            existencias = Existencia.bloquear_varias(self.producto, ubicaciones)
+            if self.destino_id:
+                try:
+                    existencias[self.destino_id].actualizar_cantidad(-self.cantidad)
+                except ExistenciaInsuficiente as error:
+                    raise MovimientoInvalido(
+                        f"No se puede anular: {self.destino} ya no tiene la cantidad del movimiento. "
+                        f"{error.messages[0].split('.')[0]}."
+                    ) from error
+            if self.origen_id:
+                existencias[self.origen_id].actualizar_cantidad(self.cantidad)
+            self.anulado = True
+            self.motivo_anulacion = motivo
+            self.anulado_por = usuario
+            self.anulado_en = timezone.now()
+            self.save(update_fields=["anulado", "motivo_anulacion", "anulado_por", "anulado_en"])
+        return self
 
     def _validar_comunes(self):
         # UC02/UC03 E1: cantidad numérica y positiva; el producto debe estar activo (RF-09).
@@ -225,7 +319,10 @@ class EntradaInventario(MovimientoInventario):
 
 
 class SalidaInventario(MovimientoInventario):
-    """RF-03: envío de un producto de la bodega a una sucursal (un producto por movimiento)."""
+    """
+    RF-03: envío de un producto de la bodega a una sucursal (un producto por movimiento).
+    D-02: con origen = sucursal y destino = null representa el consumo reportado por la sucursal.
+    """
 
     TIPO = MovimientoInventario.Tipo.SALIDA
 
@@ -233,18 +330,52 @@ class SalidaInventario(MovimientoInventario):
         verbose_name = "salida de inventario"
         verbose_name_plural = "salidas de inventario"
 
-    def aplicar(self):  # RF-03, RNF-08
+    def aplicar(self):  # RF-03, RF-07 (consumo), RNF-08
         self._validar_comunes()
-        if self.origen is None or not self.origen.es_bodega:
-            raise MovimientoInvalido("Las salidas deben partir de la bodega.")
-        if self.destino is None or not self.destino.es_sucursal:
-            raise MovimientoInvalido("El destino de una salida debe ser una sucursal.")
+        if self.destino is None:
+            if self.origen is None or not self.origen.es_sucursal:
+                raise MovimientoInvalido("El consumo debe registrarse sobre una sucursal.")
+        else:
+            if self.origen is None or not self.origen.es_bodega:
+                raise MovimientoInvalido("Las salidas deben partir de la bodega.")
+            if not self.destino.es_sucursal:
+                raise MovimientoInvalido("El destino de una salida debe ser una sucursal.")
         with transaction.atomic():
-            # Se bloquea primero el origen: dos salidas simultáneas no pueden sobregirar la bodega.
-            existencia_origen = Existencia.bloquear(self.producto, self.origen)
+            ubicaciones = [self.origen] + ([self.destino] if self.destino else [])
+            existencias = Existencia.bloquear_varias(self.producto, ubicaciones)
+            existencia_origen = existencias[self.origen.pk]
+            # Con la fila bloqueada, dos salidas simultáneas no pueden sobregirar el origen (RNF-06/08).
             if existencia_origen.cantidad < self.cantidad:
                 raise ExistenciaInsuficiente(existencia_origen.cantidad, self.producto.unidad_medida, self.origen)
             self.save()
             existencia_origen.actualizar_cantidad(-self.cantidad)
-            Existencia.bloquear(self.producto, self.destino).actualizar_cantidad(self.cantidad)
+            if self.destino:
+                existencias[self.destino.pk].actualizar_cantidad(self.cantidad)
         return self
+
+
+class DiscrepanciaInventario(models.Model):
+    """
+    RF-13 (D-03): diferencia entre lo enviado por la bodega y lo recibido en la sucursal.
+    Solo deja trazabilidad: no modifica existencias (el ajuste, si corresponde, se hace con RF-15).
+    """
+
+    movimiento = models.OneToOneField(SalidaInventario, on_delete=models.PROTECT, related_name="discrepancia")
+    cantidad_enviada = models.DecimalField("cantidad enviada", max_digits=10, decimal_places=2)
+    cantidad_recibida = models.DecimalField(
+        "cantidad recibida", max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0"))]
+    )
+    diferencia = models.DecimalField("diferencia", max_digits=10, decimal_places=2)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="discrepancias")
+    fecha = models.DateTimeField("fecha", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "discrepancia de inventario"
+        verbose_name_plural = "discrepancias de inventario"
+        ordering = ["-fecha"]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(cantidad_recibida__gte=0), name="discrepancia_recibida_no_negativa"),
+        ]
+
+    def __str__(self):
+        return f"Discrepancia en {self.movimiento}: recibido {formatear_cantidad(self.cantidad_recibida)}"

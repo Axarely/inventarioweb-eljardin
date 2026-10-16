@@ -1,0 +1,8 @@
+{% load inventario_extras %}
+<dl class="row small mb-3">
+  <dt class="col-sm-3">Movimiento</dt><dd class="col-sm-9">#{{ movimiento.pk }} · {{ movimiento.tipo_texto }} · {{ movimiento.fecha|date:"d/m/Y H:i" }}</dd>
+  <dt class="col-sm-3">Producto</dt><dd class="col-sm-9">{{ movimiento.producto }}</dd>
+  <dt class="col-sm-3">Cantidad</dt><dd class="col-sm-9">{{ movimiento.cantidad|cantidad }} {{ movimiento.producto.unidad_medida }}</dd>
+  <dt class="col-sm-3">Origen → destino</dt><dd class="col-sm-9">{{ movimiento.origen|default:"—" }} → {{ movimiento.destino|default:"—" }}</dd>
+  <dt class="col-sm-3">Registrado por</dt><dd class="col-sm-9">{{ movimiento.usuario.nombre }}</dd>
+</dl>

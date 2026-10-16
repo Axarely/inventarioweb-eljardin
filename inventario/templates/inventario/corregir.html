@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Corregir movimiento — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# RF-15 "editar": anula el original con su motivo y registra uno nuevo que lo reemplaza (D-18) #}
+<h1 class="h4 titulo-primario">Corregir movimiento</h1>
+<div class="card shadow-sm" style="max-width: 44rem"><div class="card-body">
+  {% include "inventario/_resumen_movimiento.html" %}
+  <form method="post" novalidate>{% csrf_token %}
+    {% include "_errores_form.html" %}
+    {% for campo in form %}{% include "_campo.html" %}{% endfor %}
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primario">Guardar corrección</button>
+      <a href="{% url 'inventario:historial' %}" class="btn btn-secundario">Cancelar</a>
+    </div>
+  </form>
+</div></div>
+{% endblock %}

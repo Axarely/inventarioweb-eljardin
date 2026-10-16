@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Reportar consumo — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# DEDS 1.3: los encargados "reportan el consumo" de su sucursal (RF-07, D-02) #}
+<h1 class="h4 titulo-primario mb-1">Reportar consumo</h1>
+<p class="text-muted">Sucursal {{ user.sucursal }}. El consumo descuenta la existencia de su sucursal.</p>
+<div class="card shadow-sm" style="max-width: 36rem"><div class="card-body">
+  <form method="post" novalidate>{% csrf_token %}
+    {% include "_errores_form.html" %}
+    {% for campo in form %}{% include "_campo.html" %}{% endfor %}
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primario">Registrar consumo</button>
+      <a href="{% url 'inventario:existencias' %}" class="btn btn-secundario">Ver existencias</a>
+    </div>
+  </form>
+</div></div>
+{% endblock %}

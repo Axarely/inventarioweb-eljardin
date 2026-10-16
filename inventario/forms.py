@@ -6,6 +6,7 @@ from config.ui import FormularioBootstrapMixin
 from proveedores.servicios import proveedores_activos
 from usuarios.models import Producto
 
+from .excepciones import formatear_cantidad
 from .models import Sucursal
 
 
@@ -32,6 +33,41 @@ class EntradaForm(FormularioBootstrapMixin, forms.Form):  # RF-02, RF-11 (Fig. 1
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["proveedor"].queryset = proveedores_activos()
+
+
+class ConsumoForm(FormularioBootstrapMixin, forms.Form):  # RF-07 (D-02): consumo de la sucursal
+    producto = _campo_producto()
+    cantidad = _campo_cantidad("Cantidad consumida")
+
+
+class DiscrepanciaForm(FormularioBootstrapMixin, forms.Form):  # RF-13
+    movimiento = forms.ModelChoiceField(label="Envío recibido", queryset=None, empty_label="Seleccionar envío…")
+    cantidad_recibida = forms.DecimalField(
+        label="Cantidad realmente recibida", max_digits=10, decimal_places=2, min_value=Decimal("0"),
+        widget=forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+    )
+
+    def __init__(self, *args, envios=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["movimiento"].queryset = envios
+        self.fields["movimiento"].label_from_instance = lambda m: (
+            f"{m.fecha:%d/%m/%Y %H:%M} · {m.producto} · enviado {formatear_cantidad(m.cantidad)} {m.producto.unidad_medida}"
+        )
+
+
+class AnulacionForm(FormularioBootstrapMixin, forms.Form):  # RF-15
+    motivo = forms.CharField(
+        label="Motivo de la anulación", min_length=5, widget=forms.Textarea(attrs={"rows": 3}),
+        help_text="Obligatorio. Quedará registrado en el historial junto con su usuario.",
+    )
+
+
+class CorreccionForm(FormularioBootstrapMixin, forms.Form):  # RF-15 "editar"
+    cantidad = _campo_cantidad("Cantidad correcta")
+    motivo = forms.CharField(
+        label="Motivo de la corrección", min_length=5, widget=forms.Textarea(attrs={"rows": 3}),
+        help_text="El movimiento original queda anulado con este motivo y se registra uno nuevo que lo reemplaza.",
+    )
 
 
 class SalidaForm(FormularioBootstrapMixin, forms.Form):  # RF-03 (Fig. 16)

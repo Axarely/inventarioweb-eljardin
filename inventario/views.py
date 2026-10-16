@@ -17,8 +17,8 @@ from usuarios.models import Producto
 
 from . import servicios
 from .excepciones import ExistenciaInsuficiente, formatear_cantidad
-from .forms import EntradaForm, SalidaForm
-from .models import Existencia, Ubicacion
+from .forms import AnulacionForm, ConsumoForm, CorreccionForm, DiscrepanciaForm, EntradaForm, SalidaForm
+from .models import Existencia, MovimientoInventario, Ubicacion
 
 PERM_EXISTENCIAS_TODAS = "inventario.consultar_existencias_todas"
 PERM_EXISTENCIAS_PROPIAS = "inventario.consultar_existencias_propias"
@@ -77,6 +77,124 @@ class SalidaView(PermisoRequeridoMixin, FormView):  # RF-03, UC03
             f"de {salida.producto} hacia {salida.destino}.",
         )
         return redirect("inventario:salida")
+
+
+class SucursalPropiaMixin:
+    """El encargado opera solo sobre la sucursal asociada a su usuario (DEDS 3.5, mínimo privilegio)."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.sucursal_id is None and self.has_permission():
+            messages.error(request, "Su usuario no tiene una sucursal asignada. Solicite a un dueño que la asigne.")
+            return redirect("inicio")
+        return super().dispatch(request, *args, **kwargs)
+
+
+class ConsumoView(PermisoRequeridoMixin, SucursalPropiaMixin, FormView):  # RF-07 (D-02), Fase 1 "reportan el consumo"
+    permission_required = "inventario.reportar_consumo"
+    template_name = "inventario/consumo.html"
+    form_class = ConsumoForm
+
+    def form_valid(self, form):
+        datos = form.cleaned_data
+        sucursal = self.request.user.sucursal
+        try:
+            consumo = servicios.registrar_consumo(datos["producto"].pk, datos["cantidad"], sucursal.pk, self.request.user.pk)
+        except ExistenciaInsuficiente as error:
+            form.add_error("cantidad", error.messages[0].replace(" Ajuste la cantidad o cancele el envío.", ""))
+            return self.form_invalid(form)
+        except ValidationError as error:
+            form.add_error(None, error)
+            return self.form_invalid(form)
+        messages.success(
+            self.request,
+            f"Consumo registrado: {formatear_cantidad(consumo.cantidad)} {consumo.producto.unidad_medida} "
+            f"de {consumo.producto} en {sucursal}.",
+        )
+        return redirect("inventario:consumo")
+
+
+class DiscrepanciaView(PermisoRequeridoMixin, SucursalPropiaMixin, FormView):  # RF-13
+    permission_required = "inventario.add_discrepanciainventario"
+    template_name = "inventario/discrepancia.html"
+    form_class = DiscrepanciaForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["envios"] = servicios.envios_sin_discrepancia(self.request.user.sucursal_id)
+        return kwargs
+
+    def form_valid(self, form):
+        datos = form.cleaned_data
+        try:
+            discrepancia = servicios.reportar_discrepancia(
+                datos["movimiento"].pk, datos["cantidad_recibida"], self.request.user
+            )
+        except ValidationError as error:
+            form.add_error(None, error)
+            return self.form_invalid(form)
+        messages.success(
+            self.request,
+            f"Discrepancia registrada para el envío de {discrepancia.movimiento.producto}: "
+            f"diferencia de {formatear_cantidad(discrepancia.diferencia)} {discrepancia.movimiento.producto.unidad_medida}.",
+        )
+        return redirect("inventario:discrepancia")
+
+
+class MovimientoAccionMixin(PermisoRequeridoMixin):  # RF-15
+    permission_required = "inventario.anular_movimiento"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.movimiento = get_object_or_404(
+            MovimientoInventario.objects.select_related("producto", "origen", "destino", "usuario"), pk=kwargs["pk"]
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["movimiento"] = self.movimiento
+        return contexto
+
+    def get(self, request, *args, **kwargs):
+        if self.movimiento.anulado:
+            messages.info(request, "El movimiento ya está anulado.")
+            return redirect("inventario:historial")
+        return super().get(request, *args, **kwargs)
+
+
+class AnularView(MovimientoAccionMixin, FormView):  # RF-15
+    template_name = "inventario/anular.html"
+    form_class = AnulacionForm
+
+    def form_valid(self, form):
+        try:
+            servicios.anular_movimiento(self.movimiento.pk, form.cleaned_data["motivo"], self.request.user)
+        except ValidationError as error:
+            form.add_error(None, error)
+            return self.form_invalid(form)
+        messages.success(self.request, f"Movimiento #{self.movimiento.pk} anulado; las existencias fueron revertidas.")
+        return redirect("inventario:historial")
+
+
+class CorregirView(MovimientoAccionMixin, FormView):  # RF-15 "editar" (D-18)
+    template_name = "inventario/corregir.html"
+    form_class = CorreccionForm
+
+    def get_initial(self):
+        return {"cantidad": self.movimiento.cantidad}
+
+    def form_valid(self, form):
+        datos = form.cleaned_data
+        try:
+            nuevo = servicios.corregir_movimiento(self.movimiento.pk, datos["cantidad"], datos["motivo"], self.request.user)
+        except ValidationError as error:
+            form.add_error(None, error)
+            return self.form_invalid(form)
+        messages.success(
+            self.request,
+            f"Movimiento #{self.movimiento.pk} corregido: queda anulado y lo reemplaza el #{nuevo.pk} "
+            f"con {formatear_cantidad(nuevo.cantidad)} {nuevo.producto.unidad_medida}.",
+        )
+        return redirect("inventario:historial")
 
 
 @login_required

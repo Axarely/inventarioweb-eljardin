@@ -1,17 +1,20 @@
 """
 Datos de demostración: bodega central, sucursales Santa Cruz y Peña Blanca, productos de los
-wireframes (Fig. 17), proveedores (Fig. 19), un usuario por rol y movimientos iniciales.
+wireframes (Fig. 17), proveedores (Fig. 19), un usuario por rol, movimientos iniciales y consumos de
+las sucursales repartidos en las últimas dos semanas (para que el panel de indicadores tenga datos).
 
 Es idempotente: se puede ejecutar varias veces. Los movimientos iniciales solo se crean si todavía
 no hay movimientos, y se registran con los mismos servicios que usa la aplicación, de modo que las
 existencias quedan coherentes con el historial (RF-04).
 """
 import os
+from datetime import timedelta
 from decimal import Decimal
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.utils import timezone
 
 from inventario import servicios
 from inventario.models import Bodega, MovimientoInventario, Sucursal
@@ -46,6 +49,16 @@ MOVIMIENTOS = {
     "Refresco de cola 2L": (80, 30, 20),
     "Queso mozzarella": (40, 6, 15),
 }
+
+# producto, sucursal, cantidad consumida, hace cuántos días (D-02: consumo = salida desde la sucursal)
+CONSUMOS = [
+    ("Pechuga de pollo", "Santa Cruz", 6, 12), ("Pechuga de pollo", "Peña Blanca", 4, 12),
+    ("Arroz 1 lb", "Santa Cruz", 15, 10), ("Pechuga de pollo", "Santa Cruz", 5, 8),
+    ("Pechuga de pollo", "Peña Blanca", 7, 8), ("Refresco de cola 2L", "Santa Cruz", 12, 6),
+    ("Refresco de cola 2L", "Peña Blanca", 9, 6), ("Arroz 1 lb", "Peña Blanca", 10, 5),
+    ("Aceite vegetal 1L", "Peña Blanca", 12, 4), ("Pechuga de pollo", "Santa Cruz", 4, 3),
+    ("Pechuga de pollo", "Peña Blanca", 5, 3), ("Queso mozzarella", "Santa Cruz", 6, 2),
+]
 
 
 class Command(BaseCommand):
@@ -117,9 +130,25 @@ class Command(BaseCommand):
                 servicios.registrar_salida(servilletas.pk, restante, santa_cruz.pk, bodeguero.pk)
                 movimientos += 1
 
+        consumos = 0
+        if not MovimientoInventario.objects.filter(destino__isnull=True).exists():
+            sucursales = {s.nombre: s for s in (santa_cruz, pena_blanca)}
+            encargados = {
+                "Santa Cruz": Usuario.objects.get(correo="encargado.santacruz@eljardin.test"),
+                "Peña Blanca": Usuario.objects.get(correo="encargada.penablanca@eljardin.test"),
+            }
+            for nombre, sucursal, cantidad, dias in CONSUMOS:
+                consumo = servicios.registrar_consumo(
+                    productos[nombre].pk, Decimal(cantidad), sucursales[sucursal].pk, encargados[sucursal].pk
+                )
+                # Solo para la demostración: se fecha el consumo en el pasado para poblar la serie diaria.
+                MovimientoInventario.objects.filter(pk=consumo.pk).update(fecha=timezone.now() - timedelta(days=dias))
+                consumos += 1
+
         self.stdout.write(self.style.SUCCESS(
             f"Datos demo listos: {bodega}, {santa_cruz}, {pena_blanca}; {len(productos)} productos; "
-            f"{len(proveedores)} proveedores; {creados} usuarios nuevos; {movimientos} movimientos nuevos."
+            f"{len(proveedores)} proveedores; {creados} usuarios nuevos; {movimientos} movimientos nuevos; "
+            f"{consumos} consumos nuevos."
         ))
         if creados:
             self.stdout.write("Usuarios demo (misma contraseña para todos):")

@@ -57,6 +57,8 @@ ejecutar varias veces sin duplicar nada.
 Contraseña: con `DEBUG=True` es `JardinDemo-2026`. En producción el comando exige
 `--password` o la variable `DEMO_PASSWORD`.
 
+Incluye 12 consumos de las sucursales fechados en las últimas dos semanas, para que el panel de indicadores tenga datos, y deja alertas de bajo inventario y un producto agotado (el correo a los dueños se imprime en la consola en desarrollo).
+
 Los roles base y sus permisos se crean solos con `migrate` (`usuarios/roles.py`).
 Tras 5 intentos fallidos de inicio de sesión, la cuenta queda bloqueada 15 minutos (configurable con
 `LOGIN_MAX_INTENTOS` y `LOGIN_BLOQUEO_MINUTOS`).
@@ -109,3 +111,6 @@ docs/            DEDS, consigna, plan de pruebas, backlog, ajustes, desviaciones
 - [docs/ajustes_deds.md](docs/ajustes_deds.md): correcciones de la Fase 3 incorporadas en el DEDS
 - [docs/desviaciones.md](docs/desviaciones.md): ajustes menores respecto al diseño
 - [docs/registro_tiempo.md](docs/registro_tiempo.md): horas reales invertidas
+- [docs/revision_codigo.md](docs/revision_codigo.md): revisión técnica formal del Sprint 1
+- [docs/bitacora_defectos.md](docs/bitacora_defectos.md): defectos encontrados al probar (SQA)
+- [docs/mapeo_componentes.md](docs/mapeo_componentes.md): componentes del DEDS → código y evidencia de patrones

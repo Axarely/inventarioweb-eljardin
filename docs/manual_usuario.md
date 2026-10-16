@@ -2,6 +2,12 @@
 
 **Corresponde a:** IIPD 4.3 · Para: dueños, bodeguero y encargados de sucursal
 
+## Solicitar una cuenta (primera vez)
+
+1. En la pantalla de acceso pulse **Solicitar acceso**.
+2. Escriba su nombre completo, su correo y una contraseña (dos veces). Pulse **Enviar solicitud**.
+3. Espere a que un **dueño** apruebe su solicitud y le asigne su rol. Hasta entonces no podrá entrar.
+
 ## Entrar y salir
 
 1. Abra la dirección del sistema en Chrome, Edge o Firefox (computadora o celular).
@@ -59,6 +65,9 @@ Los movimientos nunca se borran: quedan en el historial marcados como "Anulado".
   alerta.
 - **Usuarios:** cree usuarios con su rol; los encargados necesitan una sucursal. Edítelos, desactívelos o
   restablezca su contraseña.
+- **Solicitudes de acceso:** el número junto a **Usuarios** indica cuántas personas pidieron una cuenta.
+  En Usuarios → **Solicitudes de acceso** pulse **Aprobar**, elija el rol (y la sucursal si es encargado) y
+  guarde; o **Rechazar** si no corresponde.
 - **Roles:** los tres roles base son fijos. Puede crear roles adicionales eligiendo sus permisos.
 - **Proveedores:** alta, edición y activar o desactivar.
 - **Reportes:** consumo por sucursal y producto, o existencias actuales. Use **Exportar a Excel** o

@@ -23,17 +23,20 @@ resultado falso).
 | DEF-07 | 2026-10-15 | 2 | Prueba | RF-06 | Baja | `test_rf06_alerta_visible_y_atendible_por_dueno` daba un **falso fallo**: decía que la alerta atendida seguía en la lista. | Ejecución de la suite | La prueba buscaba el nombre del producto en todo el HTML, y el mensaje de confirmación "Alerta de «Pechuga de pollo» marcada como atendida" también lo contiene. | La prueba revisa la lista de alertas del contexto, no el HTML. | La misma prueba | Cerrado |
 | DEF-08 | 2026-10-15 | 2 | Producto | RF-16 | Baja | El correo de producto agotado mostraba "Stock mínimo configurado: **8.00** kg", con un formato distinto al resto del sistema ("8 kg"). | Ejecución real de `seed_demo` (correo impreso en la consola) | Se interpolaba el `Decimal` directamente, sin `formatear_cantidad`. | Se usa `formatear_cantidad`. | `test_rf16_correo_a_duenos_al_agotarse` verifica "Stock mínimo configurado: 10 kg." | Cerrado |
 | DEF-09 | 2026-10-15 | 4 | Producto | RNF-08, RF-02, RF-03 | Media | Si la base de datos fallaba **a mitad** de un movimiento (por ejemplo, después de descontar la bodega y antes de sumar a la sucursal), el usuario veía un **error 500**. Los datos quedaban bien (la transacción se revertía), pero no se cumplía UC02/UC03 E2: "el sistema informa el error sin aplicar cambios parciales". | **Prueba de sistema** `test_rnf08_falla_de_bd_a_mitad_de_una_salida` (falla de BD simulada en la segunda actualización de existencia) | Las vistas solo capturaban `ValidationError`; un `DatabaseError` llegaba sin manejar al usuario. | Las 6 vistas que registran movimientos capturan `DatabaseError`, registran la traza en el log y muestran "No se aplicó ningún cambio; intente de nuevo". Se agrega además `templates/500.html` para errores inesperados en producción. | `test_rnf08_falla_de_bd_a_mitad_de_una_salida`, `test_rnf08_falla_de_bd_en_entrada` | Cerrado |
+| DEF-10 | 2026-10-16 | 4 | Producto | RF-09 (D-32) | Media | Las categorías **fijas** desaparecían después de un `flush` de la base de datos (en pruebas o con `manage.py flush`) y no se volvían a crear. Todo producto nuevo quedaba sin categoría para elegir. | Suite completa: `test_int07_salida_y_anulacion_concurrentes_sin_deadlock` falló en la preparación (`Categoria.DoesNotExist`) después de que otra prueba transaccional vaciara la base | Las fijas solo las creaba la migración de datos 0003, y `flush` borra esos datos. | `sincronizar_categorias_base()` en `post_migrate` (el mismo mecanismo que los roles base): se recrean y se corrigen el nombre y el orden después de cada `migrate` o `flush`. | `test_rf09_categorias_fijas_se_restauran_tras_flush` y la suite completa en verde | Cerrado |
+| DEF-11 | 2026-10-16 | 4 | Producto | RF-09 (D-32) | Baja | La página Categorías listaba las fijas en orden alfabético y no en el orden definido. | Prueba `test_rf09_pagina_categorias_agregar_y_eliminar` | La consulta agrupa (`annotate(Count(...))`), y en las consultas agrupadas Django ignora `Meta.ordering` desde la versión 3.1. | `order_by("orden", "nombre")` explícito en la vista. | La misma prueba | Cerrado |
+| DEF-12 | 2026-10-16 | 4 | Producto | RF-09 (D-32) | Media | La migración de categorías **no se podía revertir**: `migrate usuarios 0002` fallaba con "la columna «categoria» contiene valores null". La migración es atómica, así que no se perdió ningún dato. | **Prueba manual** de reversa sobre la BD de desarrollo (después de un respaldo con `pg_dump`) | Al revertir 0004, Django recreaba el campo de texto como obligatorio antes de rellenarlo. | En 0003 el campo de texto pasa a admitir nulos antes de reemplazarse, y las funciones de datos usan `SET CONSTRAINTS ALL IMMEDIATE` (evita "pending trigger events" en PostgreSQL). Revertir y volver a aplicar conserva las 7 categorías de los productos. | Verificación manual (reversa + reaplicación) | Cerrado |
 
 ## Resumen
 
 | Métrica | Valor |
 |---|---|
-| Defectos registrados | 9 (7 de producto, 2 de prueba) |
-| Por severidad (producto) | Crítica 0 · Alta 2 · Media 2 · Baja 3 |
-| Cerrados / aceptados / abiertos | 8 / 1 / 0 |
-| Detectados por pruebas automatizadas (unitarias, integración, sistema) | 6 (DEF-01, 02, 04, 06, 07, 09) |
+| Defectos registrados | 12 (10 de producto, 2 de prueba) |
+| Por severidad (producto) | Crítica 0 · Alta 2 · Media 4 · Baja 4 |
+| Cerrados / aceptados / abiertos | 11 / 1 / 0 |
+| Detectados por pruebas automatizadas (unitarias, integración, sistema) | 8 (DEF-01, 02, 04, 06, 07, 09, 10, 11) |
 | Detectados por advertencias de la suite | 1 (DEF-05) |
-| Detectados por ejecución o prueba manual | 2 (DEF-03, DEF-08) |
+| Detectados por ejecución o prueba manual | 3 (DEF-03, DEF-08, DEF-12) |
 | Críticos o Altos abiertos | **0** (criterio de salida del plan de pruebas §4) |
 
 **Observación (DEF-04):** es el único caso en que una corrección introdujo una regresión, y la detectó la

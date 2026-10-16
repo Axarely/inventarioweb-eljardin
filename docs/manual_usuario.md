@@ -31,6 +31,7 @@ por debajo del stock mínimo) y **Agotado** (rojo).
 4. Un mensaje verde confirma la entrada y muestra la nueva existencia en bodega.
 
 Si el producto no está en la lista, use el enlace **Crear producto**: al guardarlo vuelve al formulario.
+Si tampoco existe su categoría, escríbala en el campo **«¿No existe la categoría? Agréguela aquí»**.
 
 **Enviar mercadería a una sucursal**
 1. Menú → **Salidas**.
@@ -63,6 +64,10 @@ Los movimientos nunca se borran: quedan en el historial marcados como "Anulado".
 - **Existencias:** elija cualquier ubicación (bodega o sucursales).
 - **Catálogo:** cree, edite y active o desactive productos. El stock mínimo define cuándo se genera una
   alerta.
+- **Categorías** (botón en Catálogo): hay 9 fijas (Proteínas, Lácteos, Congelados, Concentrados, Abarrotes,
+  Latas y aderezos, Verduras, Desechables y limpieza, Varios). Si necesita otra, escríbala en
+  **«¿No existe la categoría? Agréguela aquí»** al crear o editar un producto, o en la página Categorías.
+  Las categorías agregadas se pueden **eliminar** si ningún producto las usa; las fijas no.
 - **Usuarios:** cree usuarios con su rol; los encargados necesitan una sucursal. Edítelos, desactívelos o
   restablezca su contraseña.
 - **Solicitudes de acceso:** el número junto a **Usuarios** indica cuántas personas pidieron una cuenta.

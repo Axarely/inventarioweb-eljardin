@@ -19,18 +19,18 @@ from django.utils import timezone
 from inventario import servicios
 from inventario.models import Bodega, MovimientoInventario, Sucursal
 from proveedores.models import Proveedor
-from usuarios.models import Producto, Rol, Usuario
+from usuarios.models import Categoria, Producto, Rol, Usuario
 from usuarios.roles import rol_base, sincronizar_roles_base
 
 PASSWORD_DEMO_DEV = "JardinDemo-2026"
 
 PRODUCTOS = [
     # nombre, categoría, unidad, stock mínimo
-    ("Aceite vegetal 1L", "Abarrotes", "u.", 10),
-    ("Pechuga de pollo", "Cárnicos", "kg", 10),
+    ("Aceite vegetal 1L", "Latas y aderezos", "u.", 10),
+    ("Pechuga de pollo", "Proteínas", "kg", 10),
     ("Arroz 1 lb", "Abarrotes", "u.", 20),
-    ("Servilletas", "Desechables", "paq.", 5),
-    ("Refresco de cola 2L", "Bebidas", "u.", 12),
+    ("Servilletas", "Desechables y limpieza", "paq.", 5),
+    ("Refresco de cola 2L", "Varios", "u.", 12),
     ("Queso mozzarella", "Lácteos", "kg", 8),
 ]
 
@@ -90,7 +90,10 @@ class Command(BaseCommand):
         for nombre, categoria, unidad, minimo in PRODUCTOS:
             productos[nombre], _ = Producto.objects.get_or_create(
                 nombre=nombre,
-                defaults={"categoria": categoria, "unidad_medida": unidad, "stock_minimo": Decimal(minimo)},
+                defaults={
+                    "categoria": Categoria.objects.get(nombre=categoria),  # categorías fijas (migración 0003)
+                    "unidad_medida": unidad, "stock_minimo": Decimal(minimo),
+                },
             )
 
         proveedores = []
@@ -118,7 +121,7 @@ class Command(BaseCommand):
             bodeguero = Usuario.objects.get(correo="bodeguero@eljardin.test")
             for nombre, (entrada, a_santa_cruz, a_pena_blanca) in MOVIMIENTOS.items():
                 producto = productos[nombre]
-                proveedor = proveedores[1] if producto.categoria == "Cárnicos" else proveedores[0]
+                proveedor = proveedores[1] if producto.categoria.nombre == "Proteínas" else proveedores[0]
                 servicios.registrar_entrada(producto.pk, Decimal(entrada), proveedor.pk, bodeguero.pk)
                 servicios.registrar_salida(producto.pk, Decimal(a_santa_cruz), santa_cruz.pk, bodeguero.pk)
                 servicios.registrar_salida(producto.pk, Decimal(a_pena_blanca), pena_blanca.pk, bodeguero.pk)

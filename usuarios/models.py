@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 
@@ -123,11 +124,54 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         return self.rol_id is not None and self.rol.codigo == Rol.Codigo.ENCARGADO
 
 
+# D-32: categorías fijas del restaurante, en este orden. No se pueden eliminar ni renombrar.
+CATEGORIAS_BASE = [
+    "Proteínas", "Lácteos", "Congelados", "Concentrados", "Abarrotes", "Latas y aderezos", "Verduras",
+    "Desechables y limpieza", "Varios",
+]
+
+
+class Categoria(models.Model):
+    """D-32 (RF-09): categoría de productos. Las base son fijas; el resto se agrega o elimina."""
+
+    nombre = models.CharField("nombre", max_length=60)
+    es_base = models.BooleanField("fija", default=False, editable=False)
+    orden = models.PositiveSmallIntegerField(default=100, editable=False)
+
+    class Meta:
+        verbose_name = "categoría"
+        verbose_name_plural = "categorías"
+        ordering = ["orden", "nombre"]
+        constraints = [
+            # "Lácteos" y "lácteos" son la misma categoría.
+            models.UniqueConstraint(Lower("nombre"), name="categoria_nombre_unico_sin_mayusculas"),
+        ]
+
+    def __str__(self):
+        return self.nombre
+
+    def delete(self, *args, **kwargs):
+        if self.es_base:
+            raise ValidationError(f"«{self.nombre}» es una categoría fija y no se puede eliminar.")
+        return super().delete(*args, **kwargs)
+
+    @classmethod
+    def obtener_o_crear(cls, nombre):
+        """Busca sin distinguir mayúsculas; si no existe, la crea (agregar categoría desde el producto)."""
+        nombre = " ".join((nombre or "").split())
+        if not nombre:
+            raise ValidationError("Escriba el nombre de la categoría.")
+        existente = cls.objects.filter(nombre__iexact=nombre).first()
+        if existente:
+            return existente, False
+        return cls.objects.create(nombre=nombre[:1].upper() + nombre[1:]), True
+
+
 class Producto(models.Model):
     """RF-09: catálogo de productos."""
 
     nombre = models.CharField("nombre", max_length=120, unique=True)
-    categoria = models.CharField("categoría", max_length=60)
+    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="productos", verbose_name="categoría")
     unidad_medida = models.CharField("unidad de medida", max_length=20)
     stock_minimo = models.DecimalField(
         "stock mínimo", max_digits=10, decimal_places=2, validators=[MinValueValidator(0)]

@@ -28,7 +28,7 @@
     <label class="form-label small" for="categoria">Categoría</label>
     <select id="categoria" name="categoria" class="form-select">
       <option value="">Todas</option>
-      {% for c in categorias %}<option value="{{ c }}" {% if request.GET.categoria == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+      {% for c in categorias %}<option value="{{ c.pk }}" {% if request.GET.categoria == c.pk|stringformat:"d" %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
     </select>
   </div>
   <div class="col-sm-1"><button class="btn btn-secundario w-100" type="submit">Filtrar</button></div>

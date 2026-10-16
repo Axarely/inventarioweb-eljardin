@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Producto, Rol, Usuario
+from .models import Categoria, Producto, Rol, Usuario
 
 
 @admin.register(Usuario)
@@ -19,6 +19,14 @@ class UsuarioAdmin(admin.ModelAdmin):
 class RolAdmin(admin.ModelAdmin):
     list_display = ("nombre", "codigo")
     filter_horizontal = ("permisos",)
+
+
+@admin.register(Categoria)
+class CategoriaAdmin(admin.ModelAdmin):
+    list_display = ("nombre", "es_base")
+
+    def has_delete_permission(self, request, obj=None):
+        return obj is None or not obj.es_base  # D-32: las fijas no se eliminan
 
 
 @admin.register(Producto)

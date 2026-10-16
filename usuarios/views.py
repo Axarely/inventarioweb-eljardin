@@ -3,8 +3,9 @@ Módulo de Usuarios y Roles (DEDS 3.2): gestión de usuarios y roles (RF-10) y c
 Solo el Dueño tiene estos permisos (usuarios/roles.py); el bodeguero puede crear productos (UC02 A1).
 """
 from django.contrib import messages
-from django.db.models import ProtectedError, Q
-from django.shortcuts import get_object_or_404, redirect
+from django.db import transaction
+from django.db.models import Count, ProtectedError, Q
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, FormView, ListView, UpdateView
@@ -12,8 +13,10 @@ from django.views.generic import CreateView, FormView, ListView, UpdateView
 from autenticacion.mixins import PermisoRequeridoMixin
 from config.ui import FormularioMixin, siguiente_seguro
 
-from .forms import ProductoForm, RestablecerPasswordForm, RolForm, UsuarioCrearForm, UsuarioEditarForm
-from .models import Producto, Rol, Usuario
+from .forms import (
+    CategoriaForm, ProductoForm, RestablecerPasswordForm, RolForm, UsuarioCrearForm, UsuarioEditarForm,
+)
+from .models import Categoria, Producto, Rol, Usuario
 
 
 # --- Usuarios (RF-10) ---------------------------------------------------------------------------
@@ -182,22 +185,46 @@ class ProductoListView(PermisoRequeridoMixin, ListView):  # RF-09
     paginate_by = 25
 
     def get_queryset(self):
-        productos = Producto.objects.all()
+        productos = Producto.objects.select_related("categoria")
         texto = self.request.GET.get("q", "").strip()
         categoria = self.request.GET.get("categoria", "")
         if texto:
             productos = productos.filter(nombre__icontains=texto)
-        if categoria:
-            productos = productos.filter(categoria=categoria)
+        if categoria.isdigit():
+            productos = productos.filter(categoria_id=categoria)
         return productos
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
-        contexto["categorias"] = Producto.objects.order_by("categoria").values_list("categoria", flat=True).distinct()
+        contexto["categorias"] = Categoria.objects.all()
         return contexto
 
 
-class ProductoCrearView(PermisoRequeridoMixin, FormularioMixin, CreateView):  # RF-09, UC02 A1
+class ProductoFormularioMixin:  # D-32
+    """Guarda el producto y, si se escribió, la categoría nueva en UNA transacción: si el producto no
+    se guarda (por ejemplo, nombre repetido), la categoría tampoco queda creada."""
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["puede_crear_categoria"] = self.request.user.has_perm("usuarios.add_categoria")
+        return kwargs
+
+    def post(self, request, *args, **kwargs):
+        with transaction.atomic():
+            self._guardado = False
+            respuesta = super().post(request, *args, **kwargs)
+            if not self._guardado:
+                transaction.set_rollback(True)
+        return respuesta
+
+    def form_valid(self, form):
+        self._guardado = True
+        if form.categoria_creada:
+            messages.info(self.request, f"Categoría «{form.categoria_creada}» agregada.")
+        return super().form_valid(form)
+
+
+class ProductoCrearView(PermisoRequeridoMixin, ProductoFormularioMixin, FormularioMixin, CreateView):  # RF-09, UC02 A1
     permission_required = "usuarios.add_producto"
     form_class = ProductoForm
     titulo = "Nuevo producto"
@@ -215,7 +242,7 @@ class ProductoCrearView(PermisoRequeridoMixin, FormularioMixin, CreateView):  # 
         return super().form_valid(form)
 
 
-class ProductoEditarView(PermisoRequeridoMixin, FormularioMixin, UpdateView):  # RF-09
+class ProductoEditarView(PermisoRequeridoMixin, ProductoFormularioMixin, FormularioMixin, UpdateView):  # RF-09
     permission_required = "usuarios.change_producto"
     model = Producto
     form_class = ProductoForm
@@ -225,6 +252,58 @@ class ProductoEditarView(PermisoRequeridoMixin, FormularioMixin, UpdateView):  #
     def form_valid(self, form):
         messages.success(self.request, f"Producto «{form.instance.nombre}» actualizado.")
         return super().form_valid(form)
+
+
+# --- Categorías (D-32) --------------------------------------------------------------------------
+
+class CategoriaListView(PermisoRequeridoMixin, ListView):  # D-32, RF-09
+    permission_required = "usuarios.view_categoria"
+    template_name = "usuarios/categoria_lista.html"
+    context_object_name = "categorias"
+
+    def get_queryset(self):
+        # DEF-11: en consultas agrupadas (annotate + Count) Django ignora Meta.ordering: orden explícito.
+        return Categoria.objects.annotate(total_productos=Count("productos")).order_by("orden", "nombre")
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["form"] = kwargs.get("form") or CategoriaForm()
+        return contexto
+
+
+class CategoriaCrearView(PermisoRequeridoMixin, View):  # D-32
+    permission_required = "usuarios.add_categoria"
+
+    def post(self, request):
+        form = CategoriaForm(request.POST)
+        if form.is_valid():
+            categoria = form.save()
+            messages.success(request, f"Categoría «{categoria}» agregada.")
+            return redirect("usuarios:categorias")
+        vista = CategoriaListView()
+        vista.setup(request)
+        vista.object_list = vista.get_queryset()
+        return render(request, vista.template_name, vista.get_context_data(form=form))
+
+
+class CategoriaEliminarView(PermisoRequeridoMixin, View):  # D-32: solo agregadas y sin productos
+    permission_required = "usuarios.delete_categoria"
+
+    def post(self, request, pk):
+        categoria = get_object_or_404(Categoria, pk=pk)
+        if categoria.es_base:
+            messages.error(request, f"«{categoria}» es una categoría fija y no se puede eliminar.")
+        elif categoria.productos.exists():
+            total = categoria.productos.count()
+            messages.error(
+                request,
+                f"«{categoria}» tiene {total} producto{'s' if total != 1 else ''}. "
+                "Cámbielos de categoría antes de eliminarla.",
+            )
+        else:
+            categoria.delete()
+            messages.success(request, f"Categoría «{categoria}» eliminada.")
+        return redirect("usuarios:categorias")
 
 
 class ProductoActivarView(PermisoRequeridoMixin, View):  # RF-09: activar/desactivar

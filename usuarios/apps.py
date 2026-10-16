@@ -3,9 +3,10 @@ from django.db.models.signals import post_migrate
 
 
 def _sincronizar_roles(sender, **kwargs):
-    from .roles import sincronizar_roles_base
+    from .roles import sincronizar_categorias_base, sincronizar_roles_base
 
     sincronizar_roles_base()
+    sincronizar_categorias_base()
 
 
 class UsuariosConfig(AppConfig):

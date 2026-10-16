@@ -124,12 +124,12 @@ def consultar_existencias(ubicacion_id, filtros=None):  # RF-04, RF-05
     """Existencias de una ubicación (productos activos), con filtros opcionales `texto` y `categoria`."""
     filtros = filtros or {}
     existencias = Existencia.objects.filter(ubicacion_id=ubicacion_id, producto__activo=True).select_related(
-        "producto"
+        "producto__categoria"
     )
     if filtros.get("texto"):
         existencias = existencias.filter(producto__nombre__icontains=filtros["texto"])
-    if filtros.get("categoria"):
-        existencias = existencias.filter(producto__categoria=filtros["categoria"])
+    if str(filtros.get("categoria") or "").isdigit():
+        existencias = existencias.filter(producto__categoria_id=filtros["categoria"])
     return existencias.order_by("producto__nombre")
 
 

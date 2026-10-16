@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block titulo %}Categorías — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# D-32: categorías fijas (no se eliminan) y agregadas (se eliminan si no tienen productos) #}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <h1 class="h4 titulo-primario mb-0">Categorías de productos</h1>
+  <a class="btn btn-secundario btn-sm ms-auto" href="{% url 'usuarios:productos' %}">← Volver al catálogo</a>
+</div>
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="table-responsive">
+    <table class="table table-bordered align-middle bg-white">
+      <thead class="table-light"><tr><th>Categoría</th><th>Tipo</th><th class="text-end">Productos</th><th class="text-end">Acciones</th></tr></thead>
+      <tbody>
+      {% for c in categorias %}
+        <tr>
+          <td>{{ c.nombre }}</td>
+          <td>{% if c.es_base %}<span class="pill pill-normal">Fija</span>{% else %}<span class="pill pill-bajo">Agregada</span>{% endif %}</td>
+          <td class="text-end">{{ c.total_productos }}</td>
+          <td class="text-end">
+            {% if not c.es_base and perms.usuarios.delete_categoria %}
+              <form method="post" action="{% url 'usuarios:categoria_eliminar' c.pk %}" class="d-inline">{% csrf_token %}
+                <button class="btn btn-sm btn-outline-danger" type="submit"
+                        {% if c.total_productos %}title="Tiene productos: cámbielos de categoría primero"{% endif %}>Eliminar</button>
+              </form>
+            {% elif c.es_base %}<span class="small text-muted">No se elimina</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+  {% if perms.usuarios.add_categoria %}
+  <div class="col-lg-5">
+    <div class="card shadow-sm"><div class="card-body">
+      <h2 class="h6">Agregar categoría</h2>
+      <form method="post" action="{% url 'usuarios:categoria_crear' %}" novalidate>{% csrf_token %}
+        {% include "_errores_form.html" %}
+        {% for campo in form %}{% include "_campo.html" %}{% endfor %}
+        <button type="submit" class="btn btn-primario">Agregar</button>
+      </form>
+      <p class="small text-muted mt-3 mb-0">También puede agregar una categoría nueva directamente al crear o editar un producto.</p>
+    </div></div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

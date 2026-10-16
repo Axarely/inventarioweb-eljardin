@@ -17,10 +17,9 @@ from django.utils import timezone
 
 from inventario.models import Bodega, Existencia, MovimientoInventario, Sucursal
 from proveedores.models import Proveedor
-from usuarios.models import Producto, Usuario
+from usuarios.models import Categoria, Producto, Usuario
 
 PREFIJO = "Volumen "
-CATEGORIAS = ["Abarrotes", "Cárnicos", "Lácteos", "Bebidas", "Desechables", "Limpieza", "Verduras"]
 UNIDADES = ["u.", "kg", "paq.", "L"]
 
 
@@ -49,9 +48,10 @@ class Command(BaseCommand):
             raise CommandError("Ejecute primero `seed_demo`.")
 
         azar = random.Random(semilla)
+        categorias = list(Categoria.objects.filter(es_base=True))
         nuevos = Producto.objects.bulk_create([
             Producto(
-                nombre=f"{PREFIJO}{i:03d}", categoria=azar.choice(CATEGORIAS), unidad_medida=azar.choice(UNIDADES),
+                nombre=f"{PREFIJO}{i:03d}", categoria=azar.choice(categorias), unidad_medida=azar.choice(UNIDADES),
                 stock_minimo=Decimal(azar.randint(5, 20)),
             )
             for i in range(1, productos + 1)

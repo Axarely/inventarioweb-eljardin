@@ -15,7 +15,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import FormView, ListView
 
 from autenticacion.mixins import PermisoRequeridoMixin
-from usuarios.models import Producto
+from usuarios.models import Categoria, Producto
 
 from . import servicios
 from .excepciones import ExistenciaInsuficiente, formatear_cantidad
@@ -284,9 +284,7 @@ class ExistenciasView(LoginRequiredMixin, ListView):  # RF-04, RF-05, UC04
         contexto["ubicacion"] = self.ubicacion
         contexto["puede_todas"] = self.puede_todas
         contexto["ubicaciones"] = Ubicacion.objects.order_by("tipo", "nombre") if self.puede_todas else []
-        contexto["categorias"] = (
-            Producto.objects.filter(activo=True).order_by("categoria").values_list("categoria", flat=True).distinct()
-        )
+        contexto["categorias"] = Categoria.objects.filter(productos__activo=True).distinct()
         return contexto
 
 

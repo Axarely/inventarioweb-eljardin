@@ -13,12 +13,15 @@
       <label class="form-label small" for="categoria">Categoría</label>
       <select id="categoria" name="categoria" class="form-select">
         <option value="">Todas</option>
-        {% for c in categorias %}<option value="{{ c }}" {% if request.GET.categoria == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        {% for c in categorias %}<option value="{{ c.pk }}" {% if request.GET.categoria == c.pk|stringformat:"d" %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
       </select>
     </div>
     <div class="col-sm-2 d-flex align-items-end"><button class="btn btn-secundario w-100" type="submit">Filtrar</button></div>
   </form>
-  {% if perms.usuarios.add_producto %}<a class="btn btn-primario ms-auto" href="{% url 'usuarios:producto_crear' %}">+ Nuevo producto</a>{% endif %}
+  <div class="ms-auto d-flex gap-2">
+    {% if perms.usuarios.view_categoria %}<a class="btn btn-secundario" href="{% url 'usuarios:categorias' %}">Categorías</a>{% endif %}
+    {% if perms.usuarios.add_producto %}<a class="btn btn-primario" href="{% url 'usuarios:producto_crear' %}">+ Nuevo producto</a>{% endif %}
+  </div>
 </div>
 <div class="table-responsive">
 <table class="table table-bordered align-middle bg-white">

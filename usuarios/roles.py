@@ -12,6 +12,7 @@ PERMISOS_POR_ROL = {
         "usuarios.view_usuario", "usuarios.add_usuario", "usuarios.change_usuario",
         "usuarios.view_rol", "usuarios.add_rol", "usuarios.change_rol", "usuarios.delete_rol",
         "usuarios.view_producto", "usuarios.add_producto", "usuarios.change_producto",
+        "usuarios.view_categoria", "usuarios.add_categoria", "usuarios.delete_categoria",
         "proveedores.view_proveedor", "proveedores.add_proveedor", "proveedores.change_proveedor",
         "inventario.consultar_existencias_todas", "inventario.ver_historial",
         "inventario.anular_movimiento", "inventario.view_discrepanciainventario",
@@ -22,7 +23,7 @@ PERMISOS_POR_ROL = {
         "inventario.registrar_entrada", "inventario.registrar_salida", "inventario.ver_historial",
         "inventario.anular_movimiento",  # RF-15: corrige los movimientos que registró por error
         # UC02 A1: si el producto no existe, el bodeguero puede crearlo antes de continuar.
-        "usuarios.add_producto",
+        "usuarios.add_producto", "usuarios.add_categoria",
     ],
     "encargado": [
         "inventario.consultar_existencias_propias",
@@ -50,6 +51,25 @@ def sincronizar_roles_base():
     for codigo, nombres in PERMISOS_POR_ROL.items():
         rol, _ = Rol.objects.get_or_create(codigo=codigo, defaults={"nombre": Rol.Codigo(codigo).label})
         rol.permisos.set(_buscar_permisos(nombres))
+
+
+def sincronizar_categorias_base():
+    """
+    DEF-10 / D-32: las categorías fijas existen SIEMPRE, también después de un `flush` (que borra los
+    datos de las migraciones). Se ejecuta en post_migrate, igual que los roles base.
+    """
+    from django.db import connection
+
+    from .models import CATEGORIAS_BASE, Categoria
+
+    if Categoria._meta.db_table not in connection.introspection.table_names():
+        return  # migración parcial o revertida a antes de usuarios.0003
+    for orden, nombre in enumerate(CATEGORIAS_BASE, start=1):
+        categoria = Categoria.objects.filter(nombre__iexact=nombre).first()
+        if categoria is None:
+            Categoria.objects.create(nombre=nombre, es_base=True, orden=orden)
+        elif (categoria.nombre, categoria.es_base, categoria.orden) != (nombre, True, orden):
+            Categoria.objects.filter(pk=categoria.pk).update(nombre=nombre, es_base=True, orden=orden)
 
 
 def rol_base(codigo):

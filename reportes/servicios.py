@@ -217,7 +217,7 @@ class Reporte:
 def reporte_consumo(filtros):  # RF-07
     filas = (
         consumos(filtros)
-        .values("origen__nombre", "producto__nombre", "producto__categoria", "producto__unidad_medida")
+        .values("origen__nombre", "producto__nombre", "producto__categoria__nombre", "producto__unidad_medida")
         .annotate(total=Sum("cantidad"), registros=Count("id"))
         .order_by("origen__nombre", "producto__nombre")
     )
@@ -226,7 +226,7 @@ def reporte_consumo(filtros):  # RF-07
         filtros=filtros.describir(),
         columnas=["Sucursal", "Producto", "Categoría", "Unidad", "Total consumido", "Registros"],
         filas=[
-            [f["origen__nombre"], f["producto__nombre"], f["producto__categoria"], f["producto__unidad_medida"],
+            [f["origen__nombre"], f["producto__nombre"], f["producto__categoria__nombre"], f["producto__unidad_medida"],
              f["total"], f["registros"]]
             for f in filas
         ],
@@ -234,7 +234,7 @@ def reporte_consumo(filtros):  # RF-07
 
 
 def reporte_existencias(filtros):  # RF-14: existencias actuales (las fechas no aplican)
-    existencias = Existencia.objects.select_related("producto", "ubicacion").filter(producto__activo=True)
+    existencias = Existencia.objects.select_related("producto__categoria", "ubicacion").filter(producto__activo=True)
     if filtros.sucursal:
         existencias = existencias.filter(ubicacion=filtros.sucursal)
     if filtros.producto:
@@ -245,7 +245,7 @@ def reporte_existencias(filtros):  # RF-14: existencias actuales (las fechas no 
         filtros=filtros.describir(con_fechas=False),
         columnas=["Ubicación", "Producto", "Categoría", "Cantidad", "Unidad", "Stock mínimo", "Estado"],
         filas=[
-            [e.ubicacion.nombre, e.producto.nombre, e.producto.categoria, e.cantidad, e.producto.unidad_medida,
+            [e.ubicacion.nombre, e.producto.nombre, e.producto.categoria.nombre, e.cantidad, e.producto.unidad_medida,
              e.producto.stock_minimo, e.nivel().label]
             for e in existencias
         ],

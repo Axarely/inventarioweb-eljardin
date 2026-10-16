@@ -5,7 +5,7 @@ from django.contrib.auth.models import Permission
 
 from config.ui import FormularioBootstrapMixin
 
-from .models import Producto, Rol, Usuario
+from .models import Categoria, Producto, Rol, Usuario
 from .roles import APPS_CON_PERMISOS
 
 
@@ -94,8 +94,47 @@ class RolForm(FormularioBootstrapMixin, forms.ModelForm):  # RF-10: roles person
         fields = ["nombre", "permisos"]
 
 
-class ProductoForm(FormularioBootstrapMixin, forms.ModelForm):  # RF-09
+class ProductoForm(FormularioBootstrapMixin, forms.ModelForm):  # RF-09, D-32
+    nueva_categoria = forms.CharField(
+        label="¿No existe la categoría? Agréguela aquí", required=False, max_length=60,
+        help_text="Si escribe una categoría nueva, se crea y se asigna a este producto.",
+    )
+
     class Meta:
         model = Producto
-        fields = ["nombre", "categoria", "unidad_medida", "stock_minimo"]
+        fields = ["nombre", "categoria", "nueva_categoria", "unidad_medida", "stock_minimo"]
         widgets = {"stock_minimo": forms.NumberInput(attrs={"step": "0.01", "min": "0"})}
+
+    def __init__(self, *args, puede_crear_categoria=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["categoria"].required = False  # se exige en clean(): elegida o nueva
+        self.fields["categoria"].empty_label = "Seleccionar categoría…"
+        if not puede_crear_categoria:
+            del self.fields["nueva_categoria"]
+        self.categoria_creada = None
+
+    def clean(self):
+        datos = super().clean()
+        nueva = " ".join((datos.get("nueva_categoria") or "").split())
+        if nueva:
+            # Sin distinguir mayúsculas: si ya existe se reutiliza; si no, se crea. Quien guarda el
+            # formulario lo hace en una transacción, así que si el producto no se guarda, tampoco esto.
+            datos["categoria"], creada = Categoria.obtener_o_crear(nueva)
+            self.instance.categoria = datos["categoria"]
+            self.categoria_creada = datos["categoria"] if creada else None
+        elif not datos.get("categoria"):
+            self.add_error("categoria", "Elija una categoría o escriba una nueva.")
+        return datos
+
+
+class CategoriaForm(FormularioBootstrapMixin, forms.ModelForm):  # D-32
+    class Meta:
+        model = Categoria
+        fields = ["nombre"]
+        labels = {"nombre": "Nueva categoría"}
+
+    def clean_nombre(self):
+        nombre = " ".join(self.cleaned_data["nombre"].split())
+        if Categoria.objects.filter(nombre__iexact=nombre).exists():
+            raise forms.ValidationError(f"La categoría «{nombre}» ya existe.")
+        return nombre[:1].upper() + nombre[1:]

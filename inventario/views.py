@@ -2,12 +2,14 @@
 Módulo de Inventario (DEDS 3.2): entradas (RF-02), salidas (RF-03), existencias (RF-04, RF-05)
 e historial (RF-12). Las vistas solo delegan en inventario/servicios.py (IInventario).
 """
+import logging
 from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import DatabaseError
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import FormView, ListView
@@ -20,7 +22,20 @@ from .excepciones import ExistenciaInsuficiente, formatear_cantidad
 from .forms import AnulacionForm, ConsumoForm, CorreccionForm, DiscrepanciaForm, EntradaForm, SalidaForm
 from .models import Existencia, MovimientoInventario, Ubicacion
 
+logger = logging.getLogger(__name__)
+
 PERM_EXISTENCIAS_TODAS = "inventario.consultar_existencias_todas"
+MENSAJE_ERROR_BD = (
+    "No se pudo completar la operación por un error de la base de datos. "
+    "No se aplicó ningún cambio; intente de nuevo en unos momentos."
+)
+
+
+def error_de_base_de_datos(form):
+    """UC02/UC03 E2 (RNF-08): el movimiento se revirtió completo; se informa sin mostrar un error 500."""
+    logger.exception("Error de base de datos al registrar un movimiento")
+    form.add_error(None, MENSAJE_ERROR_BD)
+    return form
 PERM_EXISTENCIAS_PROPIAS = "inventario.consultar_existencias_propias"
 
 
@@ -38,6 +53,8 @@ class EntradaView(PermisoRequeridoMixin, FormView):  # RF-02, RF-11, UC02
         except ValidationError as error:  # UC02 E1/E2: se informa sin cambios parciales
             form.add_error(None, error)
             return self.form_invalid(form)
+        except DatabaseError:  # DEF-09, UC02/UC03 E2: se informa; la transacción ya se revirtió
+            return self.form_invalid(error_de_base_de_datos(form))
         existencia = servicios.existencia_en_bodega(entrada.producto_id)
         messages.success(
             self.request,
@@ -71,6 +88,8 @@ class SalidaView(PermisoRequeridoMixin, FormView):  # RF-03, UC03
         except ValidationError as error:
             form.add_error(None, error)
             return self.form_invalid(form)
+        except DatabaseError:  # DEF-09, UC02/UC03 E2: se informa; la transacción ya se revirtió
+            return self.form_invalid(error_de_base_de_datos(form))
         messages.success(
             self.request,
             f"Salida registrada: {formatear_cantidad(salida.cantidad)} {salida.producto.unidad_medida} "
@@ -105,6 +124,8 @@ class ConsumoView(PermisoRequeridoMixin, SucursalPropiaMixin, FormView):  # RF-0
         except ValidationError as error:
             form.add_error(None, error)
             return self.form_invalid(form)
+        except DatabaseError:  # DEF-09, UC02/UC03 E2: se informa; la transacción ya se revirtió
+            return self.form_invalid(error_de_base_de_datos(form))
         messages.success(
             self.request,
             f"Consumo registrado: {formatear_cantidad(consumo.cantidad)} {consumo.producto.unidad_medida} "
@@ -132,6 +153,8 @@ class DiscrepanciaView(PermisoRequeridoMixin, SucursalPropiaMixin, FormView):  #
         except ValidationError as error:
             form.add_error(None, error)
             return self.form_invalid(form)
+        except DatabaseError:  # DEF-09, UC02/UC03 E2: se informa; la transacción ya se revirtió
+            return self.form_invalid(error_de_base_de_datos(form))
         messages.success(
             self.request,
             f"Discrepancia registrada para el envío de {discrepancia.movimiento.producto}: "
@@ -171,6 +194,8 @@ class AnularView(MovimientoAccionMixin, FormView):  # RF-15
         except ValidationError as error:
             form.add_error(None, error)
             return self.form_invalid(form)
+        except DatabaseError:  # DEF-09, UC02/UC03 E2: se informa; la transacción ya se revirtió
+            return self.form_invalid(error_de_base_de_datos(form))
         messages.success(self.request, f"Movimiento #{self.movimiento.pk} anulado; las existencias fueron revertidas.")
         return redirect("inventario:historial")
 
@@ -189,6 +214,8 @@ class CorregirView(MovimientoAccionMixin, FormView):  # RF-15 "editar" (D-18)
         except ValidationError as error:
             form.add_error(None, error)
             return self.form_invalid(form)
+        except DatabaseError:  # DEF-09, UC02/UC03 E2: se informa; la transacción ya se revirtió
+            return self.form_invalid(error_de_base_de_datos(form))
         messages.success(
             self.request,
             f"Movimiento #{self.movimiento.pk} corregido: queda anulado y lo reemplaza el #{nuevo.pk} "

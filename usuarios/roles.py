@@ -14,19 +14,24 @@ PERMISOS_POR_ROL = {
         "usuarios.view_producto", "usuarios.add_producto", "usuarios.change_producto",
         "proveedores.view_proveedor", "proveedores.add_proveedor", "proveedores.change_proveedor",
         "inventario.consultar_existencias_todas", "inventario.ver_historial",
+        "inventario.anular_movimiento", "inventario.view_discrepanciainventario",
+        "alertas.view_alertainventario", "alertas.marcar_atendida",
+        "reportes.ver_dashboard", "reportes.ver_reportes", "reportes.exportar_reportes",
     ],
     "bodeguero": [
         "inventario.registrar_entrada", "inventario.registrar_salida", "inventario.ver_historial",
+        "inventario.anular_movimiento",  # RF-15: corrige los movimientos que registró por error
         # UC02 A1: si el producto no existe, el bodeguero puede crearlo antes de continuar.
         "usuarios.add_producto",
     ],
     "encargado": [
         "inventario.consultar_existencias_propias",
+        "inventario.reportar_consumo", "inventario.add_discrepanciainventario",
     ],
 }
 
 # Apps cuyos permisos se ofrecen al crear roles personalizados.
-APPS_CON_PERMISOS = ("usuarios", "proveedores", "inventario")
+APPS_CON_PERMISOS = ("usuarios", "proveedores", "inventario", "alertas", "reportes")
 
 
 def _buscar_permisos(nombres):

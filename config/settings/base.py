@@ -6,7 +6,9 @@ Los secretos y la conexión a PostgreSQL se leen SIEMPRE de variables de entorno
 """
 from pathlib import Path
 
+import dj_database_url
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -70,7 +72,15 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # PostgreSQL 16 (DEDS 3.1). Formato: postgres://usuario:clave@host:5432/bd
-DATABASES = {"default": env.db("DATABASE_URL")}
+DATABASES = {
+    "default": dj_database_url.config(
+        env="DATABASE_URL",
+        conn_max_age=env.int("DB_CONN_MAX_AGE", default=0),
+        conn_health_checks=True,
+    )
+}
+if not DATABASES["default"]:
+    raise ImproperlyConfigured("Defina DATABASE_URL (ver .env.example).")
 DATABASES["default"]["ATOMIC_REQUESTS"] = False  # las transacciones se declaran en los servicios (RNF-08)
 
 # RF-01 / RNF-02: usuario propio, login por correo, contraseñas con hash (PBKDF2 por defecto)

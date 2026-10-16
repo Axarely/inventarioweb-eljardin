@@ -27,16 +27,22 @@ def _login(client, correo, password=PASSWORD):
     "rol, esperado",
     [
         ("bodeguero", ["Inicio", "Entradas", "Salidas", "Historial"]),
-        ("encargado_sc", ["Inicio", "Existencias"]),
-        ("dueno", ["Inicio", "Catálogo", "Usuarios", "Roles", "Proveedores", "Existencias", "Historial"]),
+        ("encargado_sc", ["Inicio", "Existencias", "Reportar consumo", "Reportar discrepancia"]),
+        ("dueno", ["Dashboard", "Alertas", "Existencias", "Catálogo", "Usuarios", "Roles", "Proveedores",
+                   "Reportes", "Historial"]),
     ],
 )
 def test_rf01_menu_por_rol(request, cliente_de, rol, esperado):
     usuario = request.getfixturevalue(rol)
     assert [etiqueta for etiqueta, _ in opciones_para(usuario)] == esperado
-    respuesta = cliente_de(usuario).get(reverse("inicio"))
+    respuesta = cliente_de(usuario).get(reverse("inicio"), follow=True)  # el Dueño va a su Dashboard
     assert [item["etiqueta"] for item in respuesta.context["menu"]] == esperado
     assert "Cerrar sesión" in respuesta.content.decode()
+
+
+def test_rf01_dueno_entra_al_dashboard(cliente_de, dueno):
+    respuesta = cliente_de(dueno).get(reverse("inicio"))
+    assert respuesta.status_code == 302 and respuesta["Location"] == reverse("reportes:dashboard")
 
 
 def test_rf01_usuario_sin_rol_solo_ve_inicio(cliente_de, django_user_model):
@@ -60,13 +66,20 @@ RUTAS = {
     "producto_crear": reverse("usuarios:producto_crear"),
     "proveedores": reverse("proveedores:lista"),
     "proveedor_crear": reverse("proveedores:crear"),
+    "consumo": reverse("inventario:consumo"),
+    "discrepancia": reverse("inventario:discrepancia"),
+    "alertas": reverse("alertas:lista"),
+    "dashboard": reverse("reportes:dashboard"),
+    "reportes": reverse("reportes:reportes"),
+    "exportar_excel": reverse("reportes:exportar", args=["excel"]),
 }
 
 PERMITIDAS = {
     "bodeguero": {"entrada", "salida", "historial", "producto_crear"},
-    "encargado_sc": {"existencias"},
+    "encargado_sc": {"existencias", "consumo", "discrepancia"},
     "dueno": {"existencias", "historial", "usuarios", "usuario_crear", "roles", "catalogo",
-              "producto_crear", "proveedores", "proveedor_crear"},
+              "producto_crear", "proveedores", "proveedor_crear", "alertas", "dashboard", "reportes",
+              "exportar_excel"},
 }
 
 
@@ -94,7 +107,7 @@ def test_rf01_403_muestra_pagina_propia(cliente_de, encargado_sc):
 
 def test_rf01_superusuario_ve_todo(cliente_de, django_user_model):
     admin = django_user_model.objects.create_superuser(correo="admin@eljardin.test", password=PASSWORD, nombre="Admin")
-    assert len(opciones_para(admin)) == 9
+    assert len(opciones_para(admin)) == 13  # todas menos "Inicio" (va directo al Dashboard)
     assert admin.tiene_permiso("inventario.registrar_entrada")
 
 

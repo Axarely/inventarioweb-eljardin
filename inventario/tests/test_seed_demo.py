@@ -17,10 +17,11 @@ def test_rf04_seed_demo_idempotente_y_coherente(settings):
     assert Bodega.objects.count() == 1
     assert set(Sucursal.objects.values_list("nombre", flat=True)) == {"Santa Cruz", "Peña Blanca"}
     assert Usuario.objects.count() == 4
-    assert MovimientoInventario.objects.count() == 19
+    assert MovimientoInventario.objects.count() == 31  # 19 de bodega + 12 consumos
+    assert MovimientoInventario.objects.filter(destino__isnull=True, origen__tipo="sucursal").count() == 12
     # RF-04: cada existencia coincide con la suma de sus movimientos
     for existencia in Existencia.objects.all():
-        movs = MovimientoInventario.objects.filter(producto=existencia.producto)
+        movs = MovimientoInventario.objects.filter(producto=existencia.producto, anulado=False)
         entra = sum((m.cantidad for m in movs.filter(destino=existencia.ubicacion)), Decimal("0"))
         sale = sum((m.cantidad for m in movs.filter(origen=existencia.ubicacion)), Decimal("0"))
         assert existencia.cantidad == entra - sale

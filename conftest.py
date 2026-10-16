@@ -36,10 +36,25 @@ def pena_blanca(db):
 
 @pytest.fixture
 def producto(db):
-    return Producto.objects.create(
-        nombre="Pechuga de pollo", categoria=categoria_fija("Proteínas"), unidad_medida="kg",
-        stock_minimo=Decimal("10"),
+    # La migración usuarios.0006 ya crea "Pechuga de pollo" (lb, con merma): las pruebas generales usan una
+    # versión en kg y SIN control de merma para que una entrada sume directo a la existencia.
+    producto, _ = Producto.objects.update_or_create(
+        nombre="Pechuga de pollo",
+        defaults={"categoria": categoria_fija("Proteínas"), "unidad_medida": "kg", "stock_minimo": Decimal("10"),
+                  "controla_merma": False, "activo": True},
     )
+    return producto
+
+
+@pytest.fixture
+def proteina_merma(db):
+    """D-33: proteína en libras con entrada en dos pasos (creada por la migración usuarios.0006)."""
+    producto, _ = Producto.objects.update_or_create(
+        nombre="Alitas de pollo",
+        defaults={"categoria": categoria_fija("Proteínas"), "unidad_medida": "lb", "stock_minimo": Decimal("5"),
+                  "controla_merma": True, "activo": True},
+    )
+    return producto
 
 
 @pytest.fixture

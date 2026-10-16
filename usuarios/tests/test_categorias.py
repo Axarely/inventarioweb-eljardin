@@ -68,7 +68,7 @@ def test_rf09_categoria_nueva_que_ya_existe_se_reutiliza(cliente_de, dueno):
 def test_rf09_categoria_obligatoria(cliente_de, dueno):
     respuesta = cliente_de(dueno).post(URL_CREAR_PRODUCTO, producto())
     assert "Elija una categoría o escriba una nueva." in str(respuesta.context["form"].errors["categoria"])
-    assert not Producto.objects.exists()
+    assert not Producto.objects.filter(nombre="Harina").exists()
 
 
 def test_rf09_categoria_nueva_no_queda_si_el_producto_falla(cliente_de, dueno, otro_producto):

@@ -26,9 +26,9 @@ def _login(client, correo, password=PASSWORD):
 @pytest.mark.parametrize(
     "rol, esperado",
     [
-        ("bodeguero", ["Inicio", "Entradas", "Salidas", "Historial"]),
+        ("bodeguero", ["Inicio", "Entradas", "Merma", "Salidas", "Historial"]),
         ("encargado_sc", ["Inicio", "Existencias", "Reportar consumo", "Reportar discrepancia"]),
-        ("dueno", ["Dashboard", "Alertas", "Existencias", "Catálogo", "Usuarios", "Roles", "Proveedores",
+        ("dueno", ["Dashboard", "Alertas", "Merma", "Existencias", "Catálogo", "Usuarios", "Roles", "Proveedores",
                    "Reportes", "Historial"]),
     ],
 )
@@ -72,14 +72,15 @@ RUTAS = {
     "dashboard": reverse("reportes:dashboard"),
     "reportes": reverse("reportes:reportes"),
     "exportar_excel": reverse("reportes:exportar", args=["excel"]),
+    "merma": reverse("inventario:merma"),
 }
 
 PERMITIDAS = {
-    "bodeguero": {"entrada", "salida", "historial", "producto_crear"},
+    "bodeguero": {"entrada", "salida", "historial", "producto_crear", "merma"},
     "encargado_sc": {"existencias", "consumo", "discrepancia"},
     "dueno": {"existencias", "historial", "usuarios", "usuario_crear", "roles", "catalogo",
               "producto_crear", "proveedores", "proveedor_crear", "alertas", "dashboard", "reportes",
-              "exportar_excel"},
+              "exportar_excel", "merma"},
 }
 
 
@@ -107,7 +108,7 @@ def test_rf01_403_muestra_pagina_propia(cliente_de, encargado_sc):
 
 def test_rf01_superusuario_ve_todo(cliente_de, django_user_model):
     admin = django_user_model.objects.create_superuser(correo="admin@eljardin.test", password=PASSWORD, nombre="Admin")
-    assert len(opciones_para(admin)) == 13  # todas menos "Inicio" (va directo al Dashboard)
+    assert len(opciones_para(admin)) == 14  # todas menos "Inicio" (va directo al Dashboard)
     assert admin.tiene_permiso("inventario.registrar_entrada")
 
 

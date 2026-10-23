@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block titulo %}La página venció — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+<div class="card border-warning" style="max-width: 40rem">
+  <div class="card-body">
+    <h1 class="h5">La página había vencido</h1>
+    <p>Por seguridad no se guardó nada. Suele pasar si el formulario se envió dos veces o estuvo abierto mucho
+       tiempo. Vuelva a la página y repita la acción.</p>
+    <a class="btn btn-primario" href="{{ volver_a }}">Volver e intentar de nuevo</a>
+  </div>
+</div>
+{% endblock %}

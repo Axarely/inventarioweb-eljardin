@@ -92,6 +92,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+CSRF_FAILURE_VIEW = "autenticacion.csrf.fallo_csrf"  # DEF-14: aviso amable (la petición igual se rechaza)
 LOGIN_URL = "autenticacion:login"
 LOGIN_REDIRECT_URL = "inicio"
 LOGOUT_REDIRECT_URL = "autenticacion:login"

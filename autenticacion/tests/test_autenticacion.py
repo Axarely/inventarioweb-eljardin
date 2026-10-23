@@ -196,4 +196,6 @@ def test_rnf02_csrf_obligatorio_en_login(bodeguero):
 
     cliente = Client(enforce_csrf_checks=True)
     respuesta = cliente.post(URL_LOGIN, {"username": bodeguero.correo, "password": PASSWORD})
-    assert respuesta.status_code == 403
+    # Sin token CSRF el login se RECHAZA (no hay sesión); desde DEF-14 se responde con un aviso amable.
+    assert "_auth_user_id" not in cliente.session
+    assert respuesta.status_code == 302 and respuesta["Location"] == URL_LOGIN

@@ -91,3 +91,11 @@ def test_rf18_logout_invalida_sesion(client):
     client.post(reverse("autenticacion:logout"))
     respuesta = client.get(reverse("inicio"))
     assert respuesta.status_code == 302
+
+
+def test_humo_icono_del_sitio(client):
+    """El ícono (logo de El Jardín) está enlazado en las páginas y /favicon.ico no da 404."""
+    html = client.get(reverse("autenticacion:login")).content.decode()
+    assert 'rel="icon"' in html and "img/favicon.ico" in html and 'rel="apple-touch-icon"' in html
+    respuesta = client.get("/favicon.ico")
+    assert respuesta.status_code == 302 and respuesta["Location"].endswith("img/favicon.ico")

@@ -12,15 +12,14 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DatabaseError
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
-from django.views.generic import FormView, ListView, TemplateView
+from django.views import View
+from django.views.generic import FormView, ListView
 
 from autenticacion.mixins import PermisoRequeridoMixin
 from usuarios.models import Categoria, Producto
 
 from . import servicios
 from .excepciones import ExistenciaInsuficiente, formatear_cantidad
-from proveedores.models import Proveedor
-
 from .forms import (
     AnulacionForm, ConsumoForm, CorreccionForm, DiscrepanciaForm, EntradaForm, PesoRealForm, SalidaForm,
 )
@@ -48,6 +47,12 @@ class EntradaView(PermisoRequeridoMixin, FormView):  # RF-02, RF-11, UC02
     template_name = "inventario/entrada.html"
     form_class = EntradaForm
 
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        if self.request.user.has_perm("inventario.registrar_peso_real"):  # D-33
+            contexto["pendientes"] = servicios.controles_merma(ControlMerma.Estado.PENDIENTE)
+        return contexto
+
     def form_valid(self, form):
         datos = form.cleaned_data
         try:
@@ -69,7 +74,7 @@ class EntradaView(PermisoRequeridoMixin, FormView):  # RF-02, RF-11, UC02
             messages.info(
                 self.request,
                 f"{entrada.producto} controla merma: cuando producción lo limpie o prepare, registre el peso real "
-                "en Merma.",
+                "abajo, en «Pendientes de peso real».",
             )
         return redirect("inventario:entrada")
 
@@ -234,18 +239,10 @@ class CorregirView(MovimientoAccionMixin, FormView):  # RF-15 "editar" (D-18)
         return redirect("inventario:historial")
 
 
-class MermaView(LoginRequiredMixin, TemplateView):  # D-33: segunda entrada de proteínas y control interno
-    template_name = "inventario/merma.html"
-    PERMISOS = ("inventario.registrar_peso_real", "inventario.ver_control_merma")
+class RegistrarPesoRealView(PermisoRequeridoMixin, View):  # D-33: segunda entrada de proteínas
+    permission_required = "inventario.registrar_peso_real"
 
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated and not any(request.user.has_perm(p) for p in self.PERMISOS):
-            raise PermissionDenied("Su rol no tiene acceso a esta función.")
-        return super().dispatch(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        if not request.user.has_perm("inventario.registrar_peso_real"):
-            raise PermissionDenied("Su rol no puede registrar el peso real.")
+    def post(self, request):
         form = PesoRealForm(request.POST)
         if form.is_valid():
             try:
@@ -268,26 +265,7 @@ class MermaView(LoginRequiredMixin, TemplateView):  # D-33: segunda entrada de p
                 )
         else:
             messages.error(request, "Escriba un peso real válido (0 o más).")
-        return redirect(request.get_full_path())
-
-    def get_context_data(self, **kwargs):
-        contexto = super().get_context_data(**kwargs)
-        producto = self.request.GET.get("producto", "")
-        proveedor = self.request.GET.get("proveedor", "")
-        filtros = {
-            "producto_id": int(producto) if producto.isdigit() else None,
-            "proveedor_id": int(proveedor) if proveedor.isdigit() else None,
-        }
-        procesados = servicios.controles_merma(ControlMerma.Estado.PROCESADO, **filtros)
-        contexto.update(
-            pendientes=servicios.controles_merma(ControlMerma.Estado.PENDIENTE, **filtros),
-            procesados=procesados[:50],
-            resumen=servicios.resumen_merma(procesados),
-            productos=Producto.objects.filter(controla_merma=True),
-            proveedores=Proveedor.objects.all(),
-            puede_registrar=self.request.user.has_perm("inventario.registrar_peso_real"),
-        )
-        return contexto
+        return redirect("inventario:entrada")
 
 
 @login_required

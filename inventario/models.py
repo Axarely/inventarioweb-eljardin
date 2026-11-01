@@ -414,10 +414,7 @@ class ControlMerma(models.Model):
         verbose_name = "control de merma"
         verbose_name_plural = "controles de merma"
         ordering = ["-entrada__fecha"]
-        permissions = [
-            ("registrar_peso_real", "Registrar el peso real (merma) de proteínas"),
-            ("ver_control_merma", "Consultar el control de merma"),
-        ]
+        permissions = [("registrar_peso_real", "Registrar el peso real (merma) de proteínas")]
 
     def __str__(self):
         return f"Merma de {self.entrada.producto} ({self.get_estado_display().lower()})"

@@ -149,39 +149,46 @@ def test_d33_entrada_anulada_sale_de_pendientes(recepcion, bodeguero):
         servicios.registrar_peso_real(recepcion.pk, Decimal("8"), bodeguero)
 
 
-# --- Pantalla Merma ---------------------------------------------------------------------------------
+# --- Registro en Entradas y control en Reportes -------------------------------------------------
 
-def test_d33_pantalla_merma_bodeguero_registra(cliente_de, recepcion, proteina_merma, bodega, bodeguero):
+def test_d33_pendientes_en_entradas_y_registro(cliente_de, recepcion, proteina_merma, bodega, bodeguero):
     cliente = cliente_de(bodeguero)
-    pagina = cliente.get(reverse("inventario:merma"))
-    assert list(pagina.context["pendientes"]) == [recepcion] and pagina.context["puede_registrar"]
-    respuesta = cliente.post(reverse("inventario:merma"), {"control": recepcion.pk, "peso_real": "8"}, follow=True)
-    html = respuesta.content.decode()
-    assert "Peso real de Alitas de pollo: 8 lb (merma 2 lb, rendimiento 80.0 %)." in html
-    resumen = respuesta.context["resumen"]
-    assert resumen == [{"producto": "Alitas de pollo", "unidad": "lb", "recepciones": 1, "bruto": Decimal("10.00"),
-                        "real": Decimal("8.00"), "merma": Decimal("2.00"), "rendimiento": Decimal("80.0")}]
+    pagina = cliente.get(reverse("inventario:entrada"))
+    assert list(pagina.context["pendientes"]) == [recepcion] and "Pendientes de peso real" in pagina.content.decode()
+    respuesta = cliente.post(reverse("inventario:peso_real"), {"control": recepcion.pk, "peso_real": "8"}, follow=True)
+    assert "Peso real de Alitas de pollo: 8 lb (merma 2 lb, rendimiento 80.0 %)." in respuesta.content.decode()
+    assert list(respuesta.context["pendientes"]) == []
     assert bodega_de(proteina_merma, bodega) == Decimal("8")
 
 
-def test_d33_pantalla_merma_error_controlado(cliente_de, recepcion, bodeguero):
-    respuesta = cliente_de(bodeguero).post(reverse("inventario:merma"), {"control": recepcion.pk, "peso_real": "11"},
-                                           follow=True)
-    assert "no puede superar" in respuesta.content.decode()
-    respuesta = cliente_de(bodeguero).post(reverse("inventario:merma"), {"control": recepcion.pk, "peso_real": "abc"},
-                                           follow=True)
-    assert "Escriba un peso real válido" in respuesta.content.decode()
+def test_d33_merma_no_esta_en_el_menu(cliente_de, bodeguero, dueno):
+    for usuario in (bodeguero, dueno):
+        menu = cliente_de(usuario).get(reverse("inicio"), follow=True).context["menu"]
+        assert "Merma" not in [item["etiqueta"] for item in menu]
 
 
-def test_d33_dueno_ve_control_pero_no_registra(cliente_de, recepcion, dueno):
+def test_d33_peso_real_error_controlado(cliente_de, recepcion, bodeguero):
+    cliente = cliente_de(bodeguero)
+    url = reverse("inventario:peso_real")
+    assert "no puede superar" in cliente.post(url, {"control": recepcion.pk, "peso_real": "11"}, follow=True).content.decode()
+    assert "Escriba un peso real válido" in cliente.post(url, {"control": recepcion.pk, "peso_real": "abc"}, follow=True).content.decode()
+    assert cliente.post(url, {"control": 999999, "peso_real": "1"}).status_code == 404
+
+
+def test_d33_solo_bodeguero_registra_peso_real(cliente_de, recepcion, dueno, encargado_sc):
+    url = reverse("inventario:peso_real")
+    for usuario in (dueno, encargado_sc):
+        assert cliente_de(usuario).post(url, {"control": recepcion.pk, "peso_real": "8"}).status_code == 403
+
+
+def test_d33_dueno_ve_control_en_reportes_y_exporta(cliente_de, recepcion, dueno, bodeguero, proveedor):
+    servicios.registrar_peso_real(recepcion.pk, Decimal("8"), bodeguero)
     cliente = cliente_de(dueno)
-    pagina = cliente.get(reverse("inventario:merma"))
-    assert pagina.status_code == 200 and not pagina.context["puede_registrar"]
-    assert cliente.post(reverse("inventario:merma"), {"control": recepcion.pk, "peso_real": "8"}).status_code == 403
-
-
-def test_d33_encargado_sin_acceso(cliente_de, encargado_sc):
-    assert cliente_de(encargado_sc).get(reverse("inventario:merma")).status_code == 403
+    reporte = cliente.get(reverse("reportes:reportes"), {"tipo": "merma"}).context["reporte"]
+    assert reporte.filas == [["Alitas de pollo", proveedor.nombre, "lb", 1, Decimal("10.00"), Decimal("8.00"),
+                              Decimal("2.00"), Decimal("80.0")]]
+    exportado = cliente.get(reverse("reportes:exportar", args=["pdf"]), {"tipo": "merma"})
+    assert exportado.status_code == 200 and exportado.content.startswith(b"%PDF")
 
 
 def test_d33_entrada_avisa_control_de_merma(cliente_de, bodeguero, proteina_merma, bodega, proveedor):
@@ -190,4 +197,4 @@ def test_d33_entrada_avisa_control_de_merma(cliente_de, bodeguero, proteina_merm
     assert datos["controla_merma"] is True
     respuesta = cliente.post(reverse("inventario:entrada"),
                              {"producto": proteina_merma.pk, "cantidad": "10", "proveedor": proveedor.pk}, follow=True)
-    assert "registre el peso real en Merma" in respuesta.content.decode()
+    assert "Pendientes de peso real" in respuesta.content.decode()

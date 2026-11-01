@@ -7,7 +7,7 @@ ni este módulo ni las vistas instancian EntradaInventario o SalidaInventario di
 from decimal import Decimal
 
 from django.db import transaction
-from django.db.models import Count, Q, Sum
+from django.db.models import Q
 from django.utils import timezone
 
 from proveedores.servicios import obtener_proveedor_activo
@@ -82,7 +82,7 @@ def registrar_peso_real(control_id, peso_real, usuario):  # D-33: SEGUNDA entrad
     return control
 
 
-def controles_merma(estado=None, producto_id=None, proveedor_id=None):  # D-33
+def controles_merma(estado=None, producto_id=None):  # D-33
     controles = ControlMerma.objects.filter(entrada__anulado=False).select_related(
         "entrada__producto", "entrada__proveedor", "entrada__usuario", "procesado_por"
     )
@@ -90,27 +90,7 @@ def controles_merma(estado=None, producto_id=None, proveedor_id=None):  # D-33
         controles = controles.filter(estado=estado)
     if producto_id:
         controles = controles.filter(entrada__producto_id=producto_id)
-    if proveedor_id:
-        controles = controles.filter(entrada__proveedor_id=proveedor_id)
     return controles
-
-
-def resumen_merma(controles):  # D-33: control interno por producto
-    filas = (
-        controles.filter(estado=ControlMerma.Estado.PROCESADO)
-        .values("entrada__producto__nombre", "entrada__producto__unidad_medida")
-        .annotate(recepciones=Count("id"), bruto=Sum("entrada__cantidad"), real=Sum("peso_real"), merma=Sum("merma"))
-        .order_by("entrada__producto__nombre")
-    )
-    resumen = []
-    for f in filas:
-        rendimiento = (f["real"] / f["bruto"] * 100).quantize(Decimal("0.1")) if f["bruto"] else None
-        resumen.append({
-            "producto": f["entrada__producto__nombre"], "unidad": f["entrada__producto__unidad_medida"],
-            "recepciones": f["recepciones"], "bruto": f["bruto"], "real": f["real"], "merma": f["merma"],
-            "rendimiento": rendimiento,
-        })
-    return resumen
 
 
 def registrar_salida(producto_id, cantidad, sucursal_id, usuario_id):  # RF-03

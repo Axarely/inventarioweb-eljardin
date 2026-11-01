@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static inventario_extras %}
 {% block titulo %}Registrar entrada — InventarioWeb El Jardín{% endblock %}
 {% block contenido %}
 {# Wireframe Fig. 15 — UC02 Registrar entrada de mercadería a bodega (RF-02, RF-11) #}
@@ -30,5 +30,39 @@
     {% include "inventario/_panel_bodega.html" with titulo_panel="Existencia actual en bodega" %}
   </div>
 </div>
+{% if pendientes is not None %}
+{# D-33: segunda entrada de proteínas: peso real después de limpiar o preparar en producción #}
+<div class="card mt-4"><div class="card-body">
+  <h2 class="h6">Pendientes de peso real <span class="pill pill-bajo ms-1">{{ pendientes|length }}</span></h2>
+  <p class="small text-muted">Proteínas ya recibidas. Escriba el peso que quedó después de limpiarlas o prepararlas: la diferencia se descuenta de la bodega como merma.</p>
+  <div class="table-responsive">
+  <table class="table table-sm align-middle mb-0">
+    <thead class="table-light"><tr><th>Recibido</th><th>Producto</th><th>Proveedor</th><th class="text-end">Peso del proveedor</th><th>Peso real</th></tr></thead>
+    <tbody>
+    {% for c in pendientes %}
+      <tr>
+        <td class="text-nowrap">{{ c.entrada.fecha|date:"d/m/Y H:i" }}</td>
+        <td>{{ c.entrada.producto.nombre }}</td>
+        <td>{{ c.entrada.proveedor }}</td>
+        <td class="text-end">{{ c.entrada.cantidad|cantidad }} {{ c.entrada.producto.unidad_medida }}</td>
+        <td>
+          <form method="post" action="{% url 'inventario:peso_real' %}" class="d-flex gap-2 align-items-center">{% csrf_token %}
+            <input type="hidden" name="control" value="{{ c.pk }}">
+            <label class="visually-hidden" for="peso-{{ c.pk }}">Peso real de {{ c.entrada.producto.nombre }}</label>
+            <input type="number" id="peso-{{ c.pk }}" name="peso_real" class="form-control form-control-sm" style="max-width: 8rem"
+                   step="0.01" min="0" max="{{ c.entrada.cantidad|cantidad }}" placeholder="0.00" required>
+            <span class="small">{{ c.entrada.producto.unidad_medida }}</span>
+            <button type="submit" class="btn btn-sm btn-primario">Registrar</button>
+          </form>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5" class="text-muted">No hay proteínas pendientes de peso real.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div></div>
+{% endif %}
 {% endblock %}
 {% block scripts %}<script src="{% static 'js/movimientos.js' %}"></script>{% endblock %}

@@ -3,9 +3,9 @@ Menú lateral filtrado por rol (DEDS 3.5 "Diseño de la navegación", mínimo pr
 
 Cada opción declara los permisos que la habilitan (basta con uno) y, opcionalmente, un permiso que
 la oculta. El orden produce:
-- Bodeguero: Inicio, Entradas, Merma, Salidas, Historial
+- Bodeguero: Inicio, Entradas, Salidas, Historial
 - Encargado: Inicio, Existencias, Reportar consumo, Reportar discrepancia
-- Dueño: Dashboard, Alertas, Merma, Existencias, Catálogo, Usuarios, Roles, Proveedores, Reportes, Historial
+- Dueño: Dashboard, Alertas, Existencias, Catálogo, Usuarios, Roles, Proveedores, Reportes, Historial
 """
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -18,7 +18,6 @@ OPCIONES_MENU = [
     ("Dashboard", "reportes:dashboard", (DASHBOARD,), None),
     ("Alertas", "alertas:lista", ("alertas.view_alertainventario",), None),
     ("Entradas", "inventario:entrada", ("inventario.registrar_entrada",), None),
-    ("Merma", "inventario:merma", ("inventario.registrar_peso_real", "inventario.ver_control_merma"), None),
     ("Salidas", "inventario:salida", ("inventario.registrar_salida",), None),
     ("Existencias", "inventario:existencias",
      ("inventario.consultar_existencias_propias", "inventario.consultar_existencias_todas"), None),

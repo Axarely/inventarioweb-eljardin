@@ -14,7 +14,7 @@
 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
   <div>
     <h2 class="h6 mb-0">{{ reporte.titulo }}</h2>
-    <div class="small text-muted">{{ reporte.filtros }}{% if tipo == "existencias" %} · las existencias son actuales; el rango de fechas no aplica{% endif %}</div>
+    <div class="small text-muted">{{ reporte.filtros }}{% if tipo == "existencias" %} · las existencias son actuales; el rango de fechas no aplica{% elif tipo == "merma" %} · la merma se controla en bodega; el filtro de sucursal no aplica{% endif %}</div>
   </div>
   {% if perms.reportes.exportar_reportes %}
   <div class="ms-auto d-flex gap-2">

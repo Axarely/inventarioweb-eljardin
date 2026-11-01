@@ -39,7 +39,7 @@ class ReportesView(PermisoRequeridoMixin, TemplateView):  # RF-07, RF-14
             raise Http404
         form = FiltrosForm(self.request.GET)
         filtros = form.filtros()
-        contexto.update(form=form, tipo=tipo, tipos=[("consumo", "Consumo"), ("existencias", "Existencias")])
+        contexto.update(form=form, tipo=tipo, tipos=[("consumo", "Consumo"), ("existencias", "Existencias"), ("merma", "Merma")])
         if filtros is not None:
             contexto["reporte"] = servicios.REPORTES[tipo](filtros)
         return contexto

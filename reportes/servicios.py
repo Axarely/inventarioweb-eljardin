@@ -17,7 +17,7 @@ from django.utils import timezone
 
 from alertas.servicios import alertas_pendientes
 from inventario.excepciones import formatear_cantidad
-from inventario.models import Existencia, MovimientoInventario, Sucursal, Ubicacion
+from inventario.models import ControlMerma, Existencia, MovimientoInventario, Sucursal, Ubicacion
 from inventario.observador import IObservadorExistencia
 
 from .models import EstadoIndicadores
@@ -62,8 +62,9 @@ class Filtros:
             self.desde and self.desde.isoformat(), self.hasta and self.hasta.isoformat(),
         )
 
-    def describir(self, con_fechas=True):
-        partes = [f"Sucursal: {self.sucursal or 'todas'}", f"Producto: {self.producto or 'todos'}"]
+    def describir(self, con_fechas=True, con_sucursal=True):
+        partes = [f"Sucursal: {self.sucursal or 'todas'}"] if con_sucursal else []
+        partes.append(f"Producto: {self.producto or 'todos'}")
         if con_fechas:
             partes.append(f"Desde: {self.desde.strftime('%d/%m/%Y') if self.desde else 'inicio'}")
             partes.append(f"Hasta: {self.hasta.strftime('%d/%m/%Y') if self.hasta else 'hoy'}")
@@ -252,4 +253,30 @@ def reporte_existencias(filtros):  # RF-14: existencias actuales (las fechas no 
     )
 
 
-REPORTES = {"consumo": reporte_consumo, "existencias": reporte_existencias}
+def reporte_merma(filtros):  # D-33: control interno de proteínas, por producto y proveedor
+    controles = ControlMerma.objects.filter(estado=ControlMerma.Estado.PROCESADO, entrada__anulado=False)
+    if filtros.producto:
+        controles = controles.filter(entrada__producto=filtros.producto)
+    if filtros.desde:
+        controles = controles.filter(entrada__fecha__date__gte=filtros.desde)
+    if filtros.hasta:
+        controles = controles.filter(entrada__fecha__date__lte=filtros.hasta)
+    filas = (
+        controles.values("entrada__producto__nombre", "entrada__proveedor__nombre", "entrada__producto__unidad_medida")
+        .annotate(recepciones=Count("id"), bruto=Sum("entrada__cantidad"), real=Sum("peso_real"), merma=Sum("merma"))
+        .order_by("entrada__producto__nombre", "entrada__proveedor__nombre")
+    )
+    return Reporte(
+        titulo="Control de merma de proteínas",
+        filtros=filtros.describir(con_sucursal=False),
+        columnas=["Producto", "Proveedor", "Unidad", "Recepciones", "Entregado", "Peso real", "Merma", "Rendimiento %"],
+        filas=[
+            [f["entrada__producto__nombre"], f["entrada__proveedor__nombre"], f["entrada__producto__unidad_medida"],
+             f["recepciones"], f["bruto"], f["real"], f["merma"],
+             (f["real"] / f["bruto"] * 100).quantize(Decimal("0.1")) if f["bruto"] else None]
+            for f in filas
+        ],
+    )
+
+
+REPORTES = {"consumo": reporte_consumo, "existencias": reporte_existencias, "merma": reporte_merma}

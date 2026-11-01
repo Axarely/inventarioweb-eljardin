@@ -39,8 +39,8 @@ Las proteínas que se limpian o preparan en producción (alitas, pechuga, tortas
 langosta, filete) se registran en **libras** y en dos pasos:
 1. **Cuando llega el proveedor:** Menú → **Entradas**, con el peso que entregó (por ejemplo, 10 lb de alitas).
    El panel le recuerda que el producto controla merma.
-2. **Cuando producción termina de limpiar:** Menú → **Merma**. En "Pendientes" escriba el **peso real** que
-   quedó (por ejemplo, 8 lb) y pulse **Registrar**. El sistema descuenta la merma (2 lb) de la bodega y muestra
+2. **Cuando producción termina de limpiar:** Menú → **Entradas**, abajo en **Pendientes de peso real**, escriba
+   el **peso real** que quedó (por ejemplo, 8 lb) y pulse **Registrar**. El sistema descuenta la merma (2 lb) de la bodega y muestra
    el rendimiento (80 %).
 
 Los paquetes de res y de cerdo van por **unidad** y en una sola entrada. Si se equivocó con el peso real,
@@ -72,8 +72,6 @@ Los movimientos nunca se borran: quedan en el historial marcados como "Anulado".
 - **Dashboard:** consumo de cada sucursal, comparativo Santa Cruz vs. Peña Blanca, alertas activas. Filtre
   por sucursal, producto y fechas. Con un producto elegido verá también el total y la evolución diaria.
   Los datos están siempre al día; no hace falta recargar nada a mano.
-- **Merma:** control interno de las proteínas: cuánto entregó cada proveedor, cuánto quedó después de
-  limpiar, la merma y el **rendimiento %** por producto. Filtre por producto o proveedor.
 - **Alertas:** productos en estado Bajo o Agotado. Cuando gestione la reposición, pulse
   **Marcar atendida**. Si un producto se **agota**, además le llega un **correo**.
 - **Existencias:** elija cualquier ubicación (bodega o sucursales).
@@ -90,6 +88,7 @@ Los movimientos nunca se borran: quedan en el historial marcados como "Anulado".
   guarde; o **Rechazar** si no corresponde.
 - **Roles:** los tres roles base son fijos. Puede crear roles adicionales eligiendo sus permisos.
 - **Proveedores:** alta, edición y activar o desactivar.
-- **Reportes:** consumo por sucursal y producto, o existencias actuales. Use **Exportar a Excel** o
+- **Reportes:** consumo por sucursal y producto, existencias actuales o **Merma** (control interno de
+  proteínas: cuánto entregó cada proveedor, cuánto quedó, la merma y el rendimiento %). Use **Exportar a Excel** o
   **Exportar a PDF**: el archivo contiene lo mismo que la pantalla.
 - **Historial:** todos los movimientos, con quién los registró, anulaciones y discrepancias.

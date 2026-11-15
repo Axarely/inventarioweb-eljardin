@@ -195,3 +195,26 @@ def test_d39_mozzarella_rallado_en_bolsas_de_5_lb(cliente_de, bodeguero, bodega,
     assert mozzarella.en_presentaciones(Decimal("12.5")) == "2 bolsas + 2.5 lb"
     datos = cliente_de(bodeguero).get(reverse("inventario:existencia_bodega"), {"producto": mozzarella.pk}).json()
     assert datos["presentacion"] == "bolsas" and datos["unidades_por_presentacion"] == 5 and datos["unidad"] == "lb"
+
+
+def test_d40_catalogo_de_congelados():
+    congelados = {p.nombre: (p.unidad_medida, p.presentacion, p.unidades_por_presentacion, p.controla_merma)
+                  for p in Producto.objects.filter(categoria__nombre="Congelados")}
+    assert congelados == {
+        "Nuggets de pollo": ("unidad", "paquete", None, False),
+        "Papas": ("unidad", "caja", None, False),
+        "Dedos de queso": ("unidad", "paquete", None, False),
+        "Tocino": ("lb", "", None, False),
+        "Yuca": ("lb", "", None, False),
+    }
+
+
+def test_d40_congelados_sin_cantidad_definida_se_registran_por_unidad(cliente_de, bodeguero, bodega, proveedor):
+    nuggets = Producto.objects.get(nombre="Nuggets de pollo")
+    cliente = cliente_de(bodeguero)
+    por_paquete = cliente.post(reverse("inventario:entrada"), {
+        "producto": nuggets.pk, "cantidad": "2", "medida": "presentacion", "proveedor": proveedor.pk,
+    })
+    assert "medida" in por_paquete.context["form"].errors
+    cliente.post(reverse("inventario:entrada"), {"producto": nuggets.pk, "cantidad": "30", "proveedor": proveedor.pk})
+    assert existencia(nuggets, bodega) == Decimal("30")

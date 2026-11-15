@@ -42,8 +42,8 @@ del diagrama se mantienen: cliente, servidor de aplicación, base de datos y ser
 | `EMAIL_HOST_USER` | la cuenta de correo que envía | Para RF-16 |
 | `EMAIL_HOST_PASSWORD` | la contraseña de aplicación | Para RF-16 |
 | `DEFAULT_FROM_EMAIL` | `InventarioWeb El Jardín <la-cuenta@gmail.com>` | Para RF-16 |
-| `DEMO_PASSWORD` | una contraseña **nueva y robusta** para los usuarios de demostración. Déjela vacía si no quiere datos de demostración. | No |
-| `DJANGO_SUPERUSER_CORREO` | correo del administrador del admin de Django. Vacío para no crearlo. | No |
+| `DEMO_PASSWORD` | **Para uso real del restaurante, déjela VACÍA.** Si se define, crea usuarios, proveedores y movimientos de demostración que se mezclarían con los datos reales. | No |
+| `DJANGO_SUPERUSER_CORREO` | **correo real de quien administrará el sistema** (dueño). Es la primera cuenta: con ella se aprueban los registros de los demás usuarios. | Sí, para uso real |
 | `DJANGO_SUPERUSER_PASSWORD` | contraseña robusta del administrador | Solo si hay correo |
 
    `SECRET_KEY` la genera Render, y `DATABASE_URL` la conecta Render a la BD. **No** las escriba a mano.
@@ -52,6 +52,8 @@ del diagrama se mantienen: cliente, servidor de aplicación, base de datos y ser
 5. En **Logs** del servicio web, al final del build deben aparecer:
    - `XXX static files copied ... post-processed`
    - `Applying ... OK` (la primera vez)
+   - `Carga inicial lista: 3 ubicaciones y NN productos.` (solo la primera vez, D-44: bodega, sucursales y
+     catálogo real de `inventario/datos/catalogo_inicial.json`, con existencias en 0)
    - si definió `DEMO_PASSWORD`: `Datos demo listos: ...`
    - `Your service is live 🎉`
 6. La URL pública aparece arriba, a la izquierda, por ejemplo `https://inventarioweb-eljardin.onrender.com`.
@@ -62,7 +64,7 @@ del diagrama se mantienen: cliente, servidor de aplicación, base de datos y ser
 | # | Comprobación | Resultado esperado |
 |---|---|---|
 | 1 | Abrir la URL con `http://` | Redirige a `https://` (RNF-02) |
-| 2 | Iniciar sesión con `duena@eljardin.test` y `DEMO_PASSWORD` | Entra al Dashboard |
+| 2 | Iniciar sesión con `DJANGO_SUPERUSER_CORREO` y su contraseña | Entra al Dashboard; el Catálogo trae los productos reales y Existencias está vacío |
 | 3 | F12 → Aplicación → Cookies | `sessionid` y `csrftoken` con la marca **Secure** |
 | 4 | Con `encargado.santacruz@…`, reportar un consumo que agote un producto | Llega el correo "Producto agotado…" al buzón de `duena@eljardin.test`. **Ese buzón no existe:** para recibirlo de verdad, cree un dueño con su correo real desde Usuarios. |
 | 5 | Medir tiempos (F12 → Red) en Existencias, Dashboard y Reportes | < 2 s con el servicio ya activo (RNF-01) |

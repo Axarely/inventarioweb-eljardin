@@ -1,0 +1,276 @@
+{
+  "bodegas": [
+    {
+      "nombre": "Bodega central",
+      "direccion": "Santa Cruz",
+      "capacidad_max": 5000
+    }
+  ],
+  "sucursales": [
+    {
+      "nombre": "Santa Cruz",
+      "direccion": "Santa Cruz",
+      "horario": "Lun-Dom 10:00-22:00"
+    },
+    {
+      "nombre": "Peña Blanca",
+      "direccion": "Peña Blanca",
+      "horario": "Lun-Dom 10:00-22:00"
+    }
+  ],
+  "categorias_agregadas": [
+    "Bebidas"
+  ],
+  "productos": [
+    {
+      "nombre": "Alitas de pollo",
+      "categoria": "Proteínas",
+      "unidad_medida": "lb",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "5.04",
+      "controla_merma": true,
+      "activo": true
+    },
+    {
+      "nombre": "Camarón con cola",
+      "categoria": "Proteínas",
+      "unidad_medida": "lb",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.00",
+      "controla_merma": true,
+      "activo": true
+    },
+    {
+      "nombre": "Camarón sin cola",
+      "categoria": "Proteínas",
+      "unidad_medida": "lb",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.00",
+      "controla_merma": true,
+      "activo": true
+    },
+    {
+      "nombre": "Filete",
+      "categoria": "Proteínas",
+      "unidad_medida": "lb",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.35",
+      "controla_merma": true,
+      "activo": true
+    },
+    {
+      "nombre": "Langosta",
+      "categoria": "Proteínas",
+      "unidad_medida": "lb",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.00",
+      "controla_merma": true,
+      "activo": true
+    },
+    {
+      "nombre": "Paquetes de cerdo",
+      "categoria": "Proteínas",
+      "unidad_medida": "unidad",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Paquetes de res",
+      "categoria": "Proteínas",
+      "unidad_medida": "unidad",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Pechuga de pollo",
+      "categoria": "Proteínas",
+      "unidad_medida": "lb",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "10.00",
+      "controla_merma": true,
+      "activo": true
+    },
+    {
+      "nombre": "Tortas de cerdo",
+      "categoria": "Proteínas",
+      "unidad_medida": "lb",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.00",
+      "controla_merma": true,
+      "activo": true
+    },
+    {
+      "nombre": "Tortas de res",
+      "categoria": "Proteínas",
+      "unidad_medida": "lb",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.00",
+      "controla_merma": true,
+      "activo": true
+    },
+    {
+      "nombre": "Leche entera",
+      "categoria": "Lácteos",
+      "unidad_medida": "unidad",
+      "presentacion": "caja",
+      "unidades_por_presentacion": 24,
+      "stock_minimo": "0.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Margarina con ajo",
+      "categoria": "Lácteos",
+      "unidad_medida": "unidad",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Queso mozzarella",
+      "categoria": "Lácteos",
+      "unidad_medida": "bolsa de 5 lb",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "8.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Queso Sula",
+      "categoria": "Lácteos",
+      "unidad_medida": "unidad",
+      "presentacion": "paquete",
+      "unidades_por_presentacion": 16,
+      "stock_minimo": "0.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Dedos de queso",
+      "categoria": "Congelados",
+      "unidad_medida": "u",
+      "presentacion": "caja",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Nuggets de pollo",
+      "categoria": "Congelados",
+      "unidad_medida": "paq",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Papas",
+      "categoria": "Congelados",
+      "unidad_medida": "unidad",
+      "presentacion": "caja",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Tocino",
+      "categoria": "Congelados",
+      "unidad_medida": "lb",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Yuca",
+      "categoria": "Congelados",
+      "unidad_medida": "lb",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Aceite vegetal 1L",
+      "categoria": "Abarrotes",
+      "unidad_medida": "u.",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "10.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Arroz 1 lb",
+      "categoria": "Abarrotes",
+      "unidad_medida": "u.",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "20.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "paprika",
+      "categoria": "Abarrotes",
+      "unidad_medida": "u",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "0.06",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "cebolla",
+      "categoria": "Verduras",
+      "unidad_medida": "u",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "5.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Servilletas",
+      "categoria": "Desechables y limpieza",
+      "unidad_medida": "paq.",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "5.00",
+      "controla_merma": false,
+      "activo": true
+    },
+    {
+      "nombre": "Refresco de cola 2L",
+      "categoria": "Bebidas",
+      "unidad_medida": "u.",
+      "presentacion": "",
+      "unidades_por_presentacion": null,
+      "stock_minimo": "12.00",
+      "controla_merma": false,
+      "activo": true
+    }
+  ]
+}

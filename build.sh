@@ -7,6 +7,7 @@ pip install -r requirements.txt
 
 python manage.py collectstatic --no-input
 python manage.py migrate --no-input   # también sincroniza los roles base (post_migrate)
+python manage.py carga_inicial         # D-44: catálogo real del restaurante; solo actúa la primera vez
 
 # El plan gratuito de Render no ofrece consola (Shell), así que la carga inicial se hace aquí,
 # solo si se definieron las variables. Ambos comandos son idempotentes.

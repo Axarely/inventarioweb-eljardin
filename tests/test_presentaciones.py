@@ -106,13 +106,13 @@ def test_d37_consumo_por_paquetes(cliente_de, encargado_sc, santa_cruz, queso, c
     assert existencia(queso, santa_cruz) == Decimal("6")
 
 
-def test_d37_panel_y_existencias_muestran_paquetes(cliente_de, bodeguero, dueno, bodega, queso, con_existencia):
+def test_d37_panel_muestra_paquetes_y_existencias_no(cliente_de, bodeguero, dueno, bodega, queso, con_existencia):
     con_existencia(queso, bodega, 20)
     datos = cliente_de(bodeguero).get(reverse("inventario:existencia_bodega"), {"producto": queso.pk}).json()
     assert datos["presentacion"] == "paquetes" and datos["unidades_por_presentacion"] == 6
     assert datos["equivalente"] == "3 paquetes + 2 unidades"
     html = cliente_de(dueno).get(reverse("inventario:existencias"), {"ubicacion": bodega.pk}).content.decode()
-    assert "3 paquetes + 2 unidades" in html
+    assert "3 paquetes + 2 unidades" not in html and "20 unidad" in html  # D-42: la clienta pidió quitarlo
 
 
 def test_d37_dueno_define_unidades_por_caja(cliente_de, dueno, bodeguero, bodega, leche, proveedor):

@@ -31,7 +31,7 @@ PRODUCTOS = [
     ("Arroz 1 lb", "Abarrotes", "u.", 20),
     ("Servilletas", "Desechables y limpieza", "paq.", 5),
     ("Refresco de cola 2L", "Varios", "u.", 12),
-    ("Queso mozzarella", "Lácteos", "lb", 8),  # queso rallado, bolsa de 5 lb (D-39)
+    ("Queso mozzarella", "Lácteos", "bolsa de 5 lb", 2),  # rallado, se cuenta por bolsa (D-43)
 ]
 
 PROVEEDORES = [
@@ -47,7 +47,7 @@ MOVIMIENTOS = {
     "Arroz 1 lb": (150, 45, 40),
     "Servilletas": (30, 3, 10),
     "Refresco de cola 2L": (80, 30, 20),
-    "Queso mozzarella": (40, 6, 15),
+    "Queso mozzarella": (10, 2, 3),
 }
 
 # producto, sucursal, cantidad consumida, hace cuántos días (D-02: consumo = salida desde la sucursal)
@@ -57,7 +57,7 @@ CONSUMOS = [
     ("Pechuga de pollo", "Peña Blanca", 7, 8), ("Refresco de cola 2L", "Santa Cruz", 12, 6),
     ("Refresco de cola 2L", "Peña Blanca", 9, 6), ("Arroz 1 lb", "Peña Blanca", 10, 5),
     ("Aceite vegetal 1L", "Peña Blanca", 12, 4), ("Pechuga de pollo", "Santa Cruz", 4, 3),
-    ("Pechuga de pollo", "Peña Blanca", 5, 3), ("Queso mozzarella", "Santa Cruz", 6, 2),
+    ("Pechuga de pollo", "Peña Blanca", 5, 3), ("Queso mozzarella", "Santa Cruz", 1, 2),
 ]
 
 

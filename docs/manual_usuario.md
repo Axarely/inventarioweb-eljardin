@@ -51,9 +51,10 @@ anule la merma en el **Historial** y vuelva a registrarlo.
 **Productos que vienen en cajas o paquetes**
 
 Algunos productos se cuentan por **unidad** pero llegan en **cajas o paquetes** (por ejemplo, el queso Sula
-viene en paquetes de 16, la leche entera en cajas de 24 y el queso mozzarella rallado en bolsas de 5 lb). Al elegirlos aparece **«Registrar en»**: escoja **Unidades** o **Paquetes**. Si
-registra 2 paquetes de queso Sula, el sistema suma 32 unidades. Las existencias muestran las dos cosas:
-"32 unidades = 2 paquetes".
+viene en paquetes de 16 y la leche entera en cajas de 24). Al elegirlos aparece **«Registrar en»**: escoja **Unidades** o **Paquetes**. Si
+registra 2 paquetes de queso Sula, el sistema suma 32 unidades. La pantalla Existencias muestra solo las unidades.
+Otros productos se cuentan directamente por paquete o bolsa: los nuggets de pollo por **paquete** y el queso
+mozzarella rallado por **bolsa de 5 lb** (si hay 5 bolsas, se escribe 5).
 
 **Enviar mercadería a una sucursal**
 1. Menú → **Salidas**.

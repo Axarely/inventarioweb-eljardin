@@ -41,7 +41,7 @@ def test_d37_catalogo_de_lacteos():
                for p in Producto.objects.filter(categoria__nombre="Lácteos")}
     assert lacteos == {  # con las correcciones de la clienta (migración usuarios.0009, D-38)
         "Leche entera": ("unidad", "caja", 24),
-        "Queso mozzarella": ("lb", "bolsa", 5),  # queso rallado (D-39)
+        "Queso mozzarella": ("bolsa de 5 lb", "", None),  # rallado, se cuenta por bolsa (D-39, D-43)
         "Queso Sula": ("unidad", "paquete", 16),
         "Margarina con ajo": ("unidad", "", None),
     }
@@ -138,7 +138,7 @@ def test_d37_unidades_sin_presentacion_se_rechaza(cliente_de, dueno):
 
 def test_d37_catalogo_muestra_falta_definir(cliente_de, dueno, leche):
     html = cliente_de(dueno).get(reverse("usuarios:productos"), {"categoria": categoria_fija("Lácteos").pk}).content.decode()
-    assert "Paquete de 16 unidades" in html and "Bolsa de 5 lb" in html
+    assert "Paquete de 16 unidades" in html and "<td>bolsa de 5 lb</td>" in html  # unidad del mozzarella (D-43)
     assert "<td>Caja</td>" in html and "Falta definir" not in html and "sin definir" not in html
 
 
@@ -185,17 +185,13 @@ def test_d38_formulario_oculta_merma_segun_categoria(cliente_de, dueno):
     assert f'var idProteinas = "{categoria_fija("Proteínas").pk}"' in html
 
 
-def test_d39_mozzarella_rallado_en_bolsas_de_5_lb(cliente_de, bodeguero, bodega, proveedor):
+def test_d43_mozzarella_se_cuenta_por_bolsa(cliente_de, bodeguero, bodega, proveedor):
     mozzarella = Producto.objects.get(nombre="Queso mozzarella")
-    assert mozzarella.descripcion_presentacion() == "Bolsa de 5 lb"
-    respuesta = cliente_de(bodeguero).post(reverse("inventario:entrada"), {
-        "producto": mozzarella.pk, "cantidad": "3", "medida": "presentacion", "proveedor": proveedor.pk,
-    }, follow=True)
-    assert existencia(mozzarella, bodega) == Decimal("15")
-    assert "+15 lb (3 bolsas de 5) de Queso mozzarella" in respuesta.content.decode()
-    assert mozzarella.en_presentaciones(Decimal("12.5")) == "2 bolsas + 2.5 lb"
-    datos = cliente_de(bodeguero).get(reverse("inventario:existencia_bodega"), {"producto": mozzarella.pk}).json()
-    assert datos["presentacion"] == "bolsas" and datos["unidades_por_presentacion"] == 5 and datos["unidad"] == "lb"
+    assert mozzarella.unidad_medida == "bolsa de 5 lb" and not mozzarella.usa_presentacion
+    cliente_de(bodeguero).post(reverse("inventario:entrada"), {
+        "producto": mozzarella.pk, "cantidad": "5", "proveedor": proveedor.pk,
+    })
+    assert existencia(mozzarella, bodega) == Decimal("5")  # 5 bolsas, no 25 lb
 
 
 def test_d40_catalogo_de_congelados():

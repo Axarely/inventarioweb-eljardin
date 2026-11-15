@@ -244,7 +244,7 @@ def test_rf09_stock_minimo_no_negativo():
 def test_rf09_producto_creado_disponible_en_formularios(cliente_de, dueno, bodeguero):
     """Criterio RF-09: un producto creado queda disponible de inmediato en entradas y salidas."""
     cliente_de(dueno).post(reverse("usuarios:producto_crear"), {
-        "nombre": "Queso mozzarella", "categoria": categoria_fija("Lácteos").pk, "unidad_medida": "kg", "stock_minimo": "8",
+        "nombre": "Queso mozzarella", "categoria": categoria_fija("Lácteos").pk, "unidad_medida": "lb", "stock_minimo": "8",
     })
     producto = Producto.objects.get(nombre="Queso mozzarella")
     cliente = cliente_de(bodeguero)
@@ -255,7 +255,7 @@ def test_rf09_producto_creado_disponible_en_formularios(cliente_de, dueno, bodeg
 def test_rf09_editar_y_desactivar_producto(cliente_de, dueno, bodeguero, producto):
     cliente = cliente_de(dueno)
     cliente.post(reverse("usuarios:producto_editar", args=[producto.pk]), {
-        "nombre": producto.nombre, "categoria": "", "nueva_categoria": "Aves", "unidad_medida": "kg", "stock_minimo": "12",
+        "nombre": producto.nombre, "categoria": "", "nueva_categoria": "Aves", "unidad_medida": "lb", "stock_minimo": "12",
     })
     cliente.post(reverse("usuarios:producto_activar", args=[producto.pk]))
     producto.refresh_from_db()
@@ -274,7 +274,7 @@ def test_rf09_bodeguero_crea_producto_y_vuelve(cliente_de, bodeguero):
     destino = reverse("inventario:entrada")
     respuesta = cliente_de(bodeguero).post(
         reverse("usuarios:producto_crear") + f"?next={destino}",
-        {"nombre": "Harina", "categoria": categoria_fija("Abarrotes").pk, "unidad_medida": "kg", "stock_minimo": "5",
+        {"nombre": "Harina", "categoria": categoria_fija("Abarrotes").pk, "unidad_medida": "lb", "stock_minimo": "5",
          "next": destino},
     )
     assert respuesta.status_code == 302 and respuesta["Location"] == destino
@@ -283,7 +283,7 @@ def test_rf09_bodeguero_crea_producto_y_vuelve(cliente_de, bodeguero):
 
 def test_rf09_next_externo_se_ignora(cliente_de, dueno):
     respuesta = cliente_de(dueno).post(reverse("usuarios:producto_crear"), {
-        "nombre": "Sal", "categoria": categoria_fija("Abarrotes").pk, "unidad_medida": "kg", "stock_minimo": "1",
+        "nombre": "Sal", "categoria": categoria_fija("Abarrotes").pk, "unidad_medida": "lb", "stock_minimo": "1",
         "next": "https://malicioso.example.com/",
     })
     assert respuesta["Location"] == reverse("usuarios:productos")

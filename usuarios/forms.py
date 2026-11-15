@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.contrib.auth import password_validation
 from django.contrib.auth.forms import SetPasswordForm
@@ -113,6 +115,13 @@ class ProductoForm(FormularioBootstrapMixin, forms.ModelForm):  # RF-09, D-32
         if not puede_crear_categoria:
             del self.fields["nueva_categoria"]
         self.categoria_creada = None
+
+    def clean_unidad_medida(self):
+        # D-36: el restaurante no trabaja en kilos; todo lo que se pesa va en libras.
+        unidad = " ".join(self.cleaned_data["unidad_medida"].split())
+        if re.fullmatch(r"(?i)(kg|kgs|kilo|kilos|kilogramo|kilogramos)\.?", unidad):
+            raise forms.ValidationError("El restaurante no usa kilos: escriba la unidad en libras («lb»).")
+        return unidad
 
     def clean(self):
         datos = super().clean()

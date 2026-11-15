@@ -20,7 +20,7 @@ from proveedores.models import Proveedor
 from usuarios.models import Categoria, Producto, Usuario
 
 PREFIJO = "Volumen "
-UNIDADES = ["u.", "kg", "paq.", "L"]
+UNIDADES = ["u.", "lb", "paq.", "L"]  # el restaurante no usa kilos
 
 
 class Command(BaseCommand):

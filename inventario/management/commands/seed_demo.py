@@ -27,11 +27,11 @@ PASSWORD_DEMO_DEV = "JardinDemo-2026"
 PRODUCTOS = [
     # nombre, categoría, unidad, stock mínimo
     ("Aceite vegetal 1L", "Latas y aderezos", "u.", 10),
-    ("Pechuga de pollo", "Proteínas", "kg", 10),
+    ("Pechuga de pollo", "Proteínas", "lb", 10),
     ("Arroz 1 lb", "Abarrotes", "u.", 20),
     ("Servilletas", "Desechables y limpieza", "paq.", 5),
     ("Refresco de cola 2L", "Varios", "u.", 12),
-    ("Queso mozzarella", "Lácteos", "kg", 8),
+    ("Queso mozzarella", "Lácteos", "lb", 8),
 ]
 
 PROVEEDORES = [

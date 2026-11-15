@@ -17,7 +17,7 @@ URL_CREAR_PRODUCTO = reverse("usuarios:producto_crear")
 
 
 def producto(**cambios):
-    return {"nombre": "Harina", "categoria": "", "unidad_medida": "kg", "stock_minimo": "5", **cambios}
+    return {"nombre": "Harina", "categoria": "", "unidad_medida": "lb", "stock_minimo": "5", **cambios}
 
 
 # --- Categorías fijas ---------------------------------------------------------------------------
@@ -160,3 +160,16 @@ def test_rf09_categorias_fijas_se_restauran_tras_flush():
     sincronizar_categorias_base()
     assert list(Categoria.objects.filter(es_base=True).values_list("nombre", flat=True)) == CATEGORIAS_BASE
     assert Categoria.objects.filter(nombre__iexact="verduras").count() == 1
+
+
+@pytest.mark.parametrize("unidad", ["kg", "KG", "kilos", "Kilogramos", "kg."])
+def test_d36_no_se_registran_productos_en_kilos(cliente_de, dueno, unidad):
+    respuesta = cliente_de(dueno).post(URL_CREAR_PRODUCTO, producto(categoria=categoria_fija("Proteínas").pk,
+                                                                     unidad_medida=unidad))
+    assert "escriba la unidad en libras" in str(respuesta.context["form"].errors["unidad_medida"])
+    assert not Producto.objects.filter(nombre="Harina").exists()
+
+
+def test_d36_libras_si_se_aceptan(cliente_de, dueno):
+    cliente_de(dueno).post(URL_CREAR_PRODUCTO, producto(categoria=categoria_fija("Proteínas").pk, unidad_medida="lb"))
+    assert Producto.objects.get(nombre="Harina").unidad_medida == "lb"

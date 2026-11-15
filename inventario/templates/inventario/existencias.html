@@ -41,7 +41,8 @@
     <tr>
       <td>{{ e.producto.nombre }}</td>
       <td>{{ e.producto.categoria }}</td>
-      <td class="text-end">{{ e.cantidad|cantidad }} {{ e.producto.unidad_medida }}</td>
+      <td class="text-end">{{ e.cantidad|cantidad }} {{ e.producto.unidad_medida }}
+        {% if e.producto.usa_presentacion %}<div class="small text-muted">{{ e.producto|en_presentaciones:e.cantidad }}</div>{% endif %}</td>
       <td>{% pill_nivel e.nivel %}</td>
     </tr>
   {% empty %}

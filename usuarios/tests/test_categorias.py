@@ -146,7 +146,8 @@ def test_rf05_filtro_de_existencias_por_categoria_muestra_nombres(cliente_de, en
                                                                   con_existencia):
     con_existencia(producto, santa_cruz, 20)
     respuesta = cliente_de(encargado_sc).get(reverse("inventario:existencias"))
-    assert [c.nombre for c in respuesta.context["categorias"]] == ["Proteínas"]
+    # Categorías con productos activos (Lácteos los trae la migración usuarios.0008)
+    assert "Proteínas" in [c.nombre for c in respuesta.context["categorias"]]
     assert "<td>Proteínas</td>" in respuesta.content.decode()
 
 

@@ -210,6 +210,23 @@ class Producto(models.Model):
     )
     activo = models.BooleanField("activo", default=True)
 
+    # D-37: presentación de compra. La existencia se lleva en `unidad_medida` (p. ej. "unidad"), pero el
+    # producto llega en cajas o paquetes que traen varias unidades (p. ej. paquete de 6).
+    class Presentacion(models.TextChoices):
+        CAJA = "caja", "Caja"
+        PAQUETE = "paquete", "Paquete"
+
+    PLURAL_PRESENTACION = {"caja": "cajas", "paquete": "paquetes"}
+
+    presentacion = models.CharField(
+        "presentación", max_length=10, choices=Presentacion.choices, blank=True,
+        help_text="Si el producto llega en cajas o paquetes que traen varias unidades.",
+    )
+    unidades_por_presentacion = models.PositiveIntegerField(
+        "unidades por caja o paquete", null=True, blank=True,
+        help_text="Cuántas unidades trae cada caja o paquete (por ejemplo, 6).",
+    )
+
     class Meta:
         verbose_name = "producto"
         verbose_name_plural = "productos"
@@ -220,3 +237,46 @@ class Producto(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def clean(self):
+        super().clean()
+        if self.unidades_por_presentacion and not self.presentacion:
+            raise ValidationError({"presentacion": "Indique si son cajas o paquetes."})
+        if self.unidades_por_presentacion is not None and self.unidades_por_presentacion < 1:
+            raise ValidationError({"unidades_por_presentacion": "Debe ser al menos 1."})
+
+    @property
+    def usa_presentacion(self):
+        """D-37: se puede registrar por caja o paquete solo si se sabe cuántas unidades trae."""
+        return bool(self.presentacion and self.unidades_por_presentacion)
+
+    def unidad_en(self, cantidad):
+        """"unidad" en plural cuando corresponde (6 unidades); las abreviaturas (lb, paq.) no cambian."""
+        return "unidades" if self.unidad_medida == "unidad" and cantidad != 1 else self.unidad_medida
+
+    def nombre_presentacion(self, cantidad=2):
+        if not self.presentacion:
+            return ""
+        return self.get_presentacion_display().lower() if cantidad == 1 else self.PLURAL_PRESENTACION[self.presentacion]
+
+    def descripcion_presentacion(self):
+        """"Paquete de 6 unidad", "Caja (unidades sin definir)" o ""."""
+        if not self.presentacion:
+            return ""
+        if not self.unidades_por_presentacion:
+            return f"{self.get_presentacion_display()} (unidades sin definir)"
+        return f"{self.get_presentacion_display()} de {self.unidades_por_presentacion} {self.unidad_en(self.unidades_por_presentacion)}"
+
+    def en_presentaciones(self, cantidad):
+        """D-37: 20 unidades con paquete de 6 -> "3 paquetes + 2 unidad". Vacío si no aplica."""
+        if not self.usa_presentacion or cantidad is None:
+            return ""
+        enteros, resto = divmod(cantidad, self.unidades_por_presentacion)
+        partes = []
+        if enteros:
+            enteros = int(enteros)
+            partes.append(f"{enteros} {self.nombre_presentacion(enteros)}")
+        if resto:
+            texto = f"{resto:.2f}".rstrip("0").rstrip(".")
+            partes.append(f"{texto} {self.unidad_en(resto)}")
+        return " + ".join(partes) or f"0 {self.nombre_presentacion(0)}"

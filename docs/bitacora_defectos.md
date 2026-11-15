@@ -28,15 +28,16 @@ resultado falso).
 | DEF-12 | 2026-10-16 | 4 | Producto | RF-09 (D-32) | Media | La migración de categorías **no se podía revertir**: `migrate usuarios 0002` fallaba con "la columna «categoria» contiene valores null". La migración es atómica, así que no se perdió ningún dato. | **Prueba manual** de reversa sobre la BD de desarrollo (después de un respaldo con `pg_dump`) | Al revertir 0004, Django recreaba el campo de texto como obligatorio antes de rellenarlo. | En 0003 el campo de texto pasa a admitir nulos antes de reemplazarse, y las funciones de datos usan `SET CONSTRAINTS ALL IMMEDIATE` (evita "pending trigger events" en PostgreSQL). Revertir y volver a aplicar conserva las 7 categorías de los productos. | Verificación manual (reversa + reaplicación) | Cerrado |
 | DEF-13 | 2026-10-16 | 4 | Producto | D-33 | **Alta** | Registrar el peso real de una proteína fallaba siempre con un error de base de datos: "FOR UPDATE no puede ser aplicado al lado nulable de un outer join". La funcionalidad de merma quedaba inutilizable. | Pruebas automatizadas `test_merma.py` (10 casos fallidos) antes del commit | `select_for_update()` con `select_related("entrada__destino")`: `destino` admite nulos, así que Django genera un LEFT OUTER JOIN, y PostgreSQL no permite bloquear filas de ese lado. | `select_for_update(of=("self",))`: se bloquea solo la fila del control, que es lo que evita registrar dos veces el peso real. | `inventario/tests/test_merma.py` (22 pruebas) en verde | Cerrado |
 | DEF-14 | 2026-10-22 | 4 | Producto | RF-01, RNF-02, RNF-03 | Media | Un **doble clic en "Entrar"** mostraba la página técnica de Django "Prohibido (403) – La verificación CSRF ha fallado", aunque el inicio de sesión **sí** se había hecho. Lo mismo podía pasar en cualquier formulario enviado dos veces. | **Prueba manual** de la estudiante en el navegador. Log de `runserver`: `POST /login/ 302` y, un segundo después, `POST /login/ 403 (CSRF token from POST incorrect)` | Al iniciar sesión Django rota el token CSRF. El segundo envío, salido antes de que llegara la respuesta del primero, llevaba el token viejo. No había protección contra el doble envío ni una vista propia para el fallo CSRF. | (1) Script en `base.html` que bloquea el reenvío de formularios POST (doble clic). (2) `CSRF_FAILURE_VIEW` propio (`autenticacion/csrf.py`): con sesión redirige al inicio; en el login o el registro vuelve al formulario con el aviso "La página había vencido"; en los demás casos muestra una página propia en español. **La protección no cambia:** la petición con token inválido se sigue rechazando. | `autenticacion/tests/test_csrf.py` (3 pruebas, incluida la simulación del doble envío) y `test_rnf02_csrf_obligatorio_en_login` | Cerrado |
+| DEF-15 | 2026-11-15 | 4 | Producto | RNF-03 (D-35, D-37) | Baja | El campo nuevo "unidades por caja o paquete" del catálogo salía con flechas de subir y bajar, contra lo pedido en D-35 (las cantidades se escriben). | Prueba automatizada `test_d35_formularios_sin_campos_numericos_con_flechas`, escrita para la petición anterior, al correr la suite antes del commit | El campo usaba el control numérico por defecto de Django (`type="number"`). | Campo de texto con `inputmode="numeric"`. | La misma prueba | Cerrado |
 
 ## Resumen
 
 | Métrica | Valor |
 |---|---|
-| Defectos registrados | 14 (12 de producto, 2 de prueba) |
-| Por severidad (producto) | Crítica 0 · Alta 3 · Media 5 · Baja 4 |
-| Cerrados / aceptados / abiertos | 13 / 1 / 0 |
-| Detectados por pruebas automatizadas (unitarias, integración, sistema) | 9 (DEF-01, 02, 04, 06, 07, 09, 10, 11, 13) |
+| Defectos registrados | 15 (13 de producto, 2 de prueba) |
+| Por severidad (producto) | Crítica 0 · Alta 3 · Media 5 · Baja 5 |
+| Cerrados / aceptados / abiertos | 14 / 1 / 0 |
+| Detectados por pruebas automatizadas (unitarias, integración, sistema) | 10 (DEF-01, 02, 04, 06, 07, 09, 10, 11, 13, 15) |
 | Detectados por advertencias de la suite | 1 (DEF-05) |
 | Detectados por ejecución o prueba manual | 4 (DEF-03, DEF-08, DEF-12, DEF-14) |
 | Críticos o Altos abiertos | **0** (criterio de salida del plan de pruebas §4) |

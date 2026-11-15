@@ -67,8 +67,9 @@ class EntradaView(PermisoRequeridoMixin, FormView):  # RF-02, RF-11, UC02
         existencia = servicios.existencia_en_bodega(entrada.producto_id)
         messages.success(
             self.request,
-            f"Entrada registrada: +{formatear_cantidad(entrada.cantidad)} {entrada.producto.unidad_medida} "
-            f"de {entrada.producto}. Existencia en bodega: {formatear_cantidad(existencia.cantidad)}.",
+            f"Entrada registrada: +{formatear_cantidad(entrada.cantidad)} {entrada.producto.unidad_medida}"
+            f"{form.descripcion_conversion()} de {entrada.producto}. "
+            f"Existencia en bodega: {formatear_cantidad(existencia.cantidad)}.",
         )
         if entrada.producto.controla_merma:  # D-33
             messages.info(
@@ -107,8 +108,8 @@ class SalidaView(PermisoRequeridoMixin, FormView):  # RF-03, UC03
             return self.form_invalid(error_de_base_de_datos(form))
         messages.success(
             self.request,
-            f"Salida registrada: {formatear_cantidad(salida.cantidad)} {salida.producto.unidad_medida} "
-            f"de {salida.producto} hacia {salida.destino}.",
+            f"Salida registrada: {formatear_cantidad(salida.cantidad)} {salida.producto.unidad_medida}"
+            f"{form.descripcion_conversion()} de {salida.producto} hacia {salida.destino}.",
         )
         return redirect("inventario:salida")
 
@@ -143,8 +144,8 @@ class ConsumoView(PermisoRequeridoMixin, SucursalPropiaMixin, FormView):  # RF-0
             return self.form_invalid(error_de_base_de_datos(form))
         messages.success(
             self.request,
-            f"Consumo registrado: {formatear_cantidad(consumo.cantidad)} {consumo.producto.unidad_medida} "
-            f"de {consumo.producto} en {sucursal}.",
+            f"Consumo registrado: {formatear_cantidad(consumo.cantidad)} {consumo.producto.unidad_medida}"
+            f"{form.descripcion_conversion()} de {consumo.producto} en {sucursal}.",
         )
         return redirect("inventario:consumo")
 
@@ -287,6 +288,10 @@ def existencia_bodega(request):
         "nivel": nivel.value,
         "nivel_texto": nivel.label,
         "controla_merma": producto.controla_merma,  # D-33: aviso en el formulario de entrada
+        # D-37: presentación de compra (caja o paquete) para registrar por presentación
+        "presentacion": producto.nombre_presentacion() if producto.usa_presentacion else "",
+        "unidades_por_presentacion": producto.unidades_por_presentacion if producto.usa_presentacion else None,
+        "equivalente": producto.en_presentaciones(existencia.cantidad),
     })
 
 

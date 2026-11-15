@@ -48,6 +48,13 @@ langosta, filete) se registran en **libras** y en dos pasos:
 Los paquetes de res y de cerdo van por **unidad** y en una sola entrada. Si se equivocó con el peso real,
 anule la merma en el **Historial** y vuelva a registrarlo.
 
+**Productos que vienen en cajas o paquetes**
+
+Algunos productos se cuentan por **unidad** pero llegan en **cajas o paquetes** (por ejemplo, el queso Zula
+viene en paquetes de 6). Al elegirlos aparece **«Registrar en»**: escoja **Unidades** o **Paquetes**. Si
+registra 3 paquetes, el sistema suma 18 unidades. Las existencias muestran las dos cosas: "18 unidades
+(3 paquetes)".
+
 **Enviar mercadería a una sucursal**
 1. Menú → **Salidas**.
 2. Elija la sucursal, el producto y la cantidad. El panel derecho avisa si alcanza o no.
@@ -79,6 +86,10 @@ Los movimientos nunca se borran: quedan en el historial marcados como "Anulado".
 - **Existencias:** elija cualquier ubicación (bodega o sucursales).
 - **Catálogo:** cree, edite y active o desactive productos. El stock mínimo define cuándo se genera una
   alerta.
+- **Presentación (cajas o paquetes):** al editar un producto indique si llega en **caja** o **paquete** y
+  **cuántas unidades trae**. Si falta ese número (la lista muestra «Falta definir»), el producto solo se
+  puede registrar en unidades. **Pendiente:** definir cuántas unidades trae la caja de Leche entera y la de
+  Margarina con ajo.
 - **Categorías** (botón en Catálogo): hay 9 fijas (Proteínas, Lácteos, Congelados, Concentrados, Abarrotes,
   Latas y aderezos, Verduras, Desechables y limpieza, Varios). Si necesita otra, escríbala en
   **«¿No existe la categoría? Agréguela aquí»** al crear o editar un producto, o en la página Categorías.

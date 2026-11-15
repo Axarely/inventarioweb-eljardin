@@ -25,13 +25,14 @@
 </div>
 <div class="table-responsive">
 <table class="table table-bordered align-middle bg-white">
-  <thead class="table-light"><tr><th>Producto</th><th>Categoría</th><th>Unidad</th><th class="text-end">Stock mínimo</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+  <thead class="table-light"><tr><th>Producto</th><th>Categoría</th><th>Unidad</th><th>Presentación</th><th class="text-end">Stock mínimo</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
   <tbody>
   {% for p in object_list %}
     <tr>
       <td>{{ p.nombre }}</td>
       <td>{{ p.categoria }}</td>
       <td>{{ p.unidad_medida }}</td>
+      <td>{% if p.presentacion %}{{ p.descripcion_presentacion }}{% if not p.unidades_por_presentacion %} <span class="pill pill-bajo">Falta definir</span>{% endif %}{% else %}—{% endif %}</td>
       <td class="text-end">{{ p.stock_minimo|cantidad }}</td>
       <td>{% if p.activo %}<span class="pill pill-normal">Activo</span>{% else %}<span class="pill pill-inactivo">Inactivo</span>{% endif %}</td>
       <td class="text-end text-nowrap">
@@ -44,7 +45,7 @@
       </td>
     </tr>
   {% empty %}
-    <tr><td colspan="6" class="text-muted">No hay productos que coincidan.</td></tr>
+    <tr><td colspan="7" class="text-muted">No hay productos que coincidan.</td></tr>
   {% endfor %}
   </tbody>
 </table>

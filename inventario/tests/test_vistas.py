@@ -122,7 +122,8 @@ def test_rf02_api_existencia_bodega(cliente_de, bodeguero, bodega, producto, con
     con_existencia(producto, bodega, "8.5")
     datos = cliente_de(bodeguero).get(URL_API, {"producto": producto.pk}).json()
     assert datos == {"cantidad": "8.5", "unidad": "kg", "stock_minimo": "10", "nivel": "bajo", "nivel_texto": "Bajo",
-                     "controla_merma": False}
+                     "controla_merma": False, "presentacion": "", "unidades_por_presentacion": None,
+                     "equivalente": ""}
 
 
 def test_rf02_api_existencia_sin_registro_es_agotado(cliente_de, bodeguero, bodega, producto):

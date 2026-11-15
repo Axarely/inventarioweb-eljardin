@@ -13,6 +13,29 @@
   const elMinimo = document.getElementById("panel-minimo");
   const elPill = document.getElementById("panel-pill");
   const elMerma = document.getElementById("panel-merma");
+  const elEquivalente = document.getElementById("panel-equivalente");
+  const selMedida = form.querySelector("[name=medida]");
+  const bloqueMedida = document.getElementById("bloque-medida");
+  let factor = null; // D-37: unidades por caja o paquete del producto elegido
+
+  function cantidadEnUnidades() {
+    const n = leerCantidad(inpCantidad.value);
+    return selMedida && selMedida.value === "presentacion" && factor ? n * factor : n;
+  }
+
+  function prepararMedida(d) {
+    factor = d && d.unidades_por_presentacion ? Number(d.unidades_por_presentacion) : null;
+    if (!selMedida) return;
+    const opcion = selMedida.querySelector("option[value=presentacion]");
+    if (factor) {
+      opcion.textContent = d.presentacion.charAt(0).toUpperCase() + d.presentacion.slice(1) +
+        " (" + factor + " " + d.unidad + " c/u)";
+      if (bloqueMedida) bloqueMedida.hidden = false;
+    } else {
+      selMedida.value = "unidad";
+      if (bloqueMedida) bloqueMedida.hidden = true;
+    }
+  }
   let disponible = null;
 
   // D-35: misma lectura que el servidor (config/ui.py): "1.5", "1,5", "1 1/2", "1 y media".
@@ -46,7 +69,7 @@
 
   function revisarCantidad() {
     if (!validarMaximo || disponible === null || !inpCantidad) return;
-    const pedida = leerCantidad(inpCantidad.value);
+    const pedida = cantidadEnUnidades();
     elPill.replaceChildren(
       !isNaN(pedida) && pedida > disponible
         ? pill("agotado", "Insuficiente: máximo " + disponible)
@@ -58,7 +81,9 @@
     disponible = null;
     elPill.replaceChildren();
     if (elMerma) elMerma.hidden = true;
+    if (elEquivalente) elEquivalente.textContent = "";
     if (!selProducto.value) {
+      prepararMedida(null);
       elCantidad.textContent = "—";
       elMinimo.textContent = "Seleccione un producto.";
       if (inpUnidad) inpUnidad.value = "";
@@ -73,6 +98,8 @@
       disponible = parseFloat(d.cantidad);
       elCantidad.textContent = d.cantidad + " " + d.unidad;
       elMinimo.textContent = "Stock mínimo: " + d.stock_minimo + " " + d.unidad;
+      if (elEquivalente) elEquivalente.textContent = d.equivalente ? "= " + d.equivalente : "";
+      prepararMedida(d);
       if (inpUnidad) inpUnidad.value = d.unidad;
       if (validarMaximo) {
         if (inpCantidad) inpCantidad.max = d.cantidad;
@@ -89,10 +116,12 @@
 
   selProducto.addEventListener("change", actualizar);
   if (inpCantidad) inpCantidad.addEventListener("input", revisarCantidad);
+  if (selMedida) selMedida.addEventListener("change", revisarCantidad);
   const usarMaximo = document.getElementById("usar-maximo");
   if (usarMaximo) {
     usarMaximo.addEventListener("click", function () {
       inpCantidad.value = usarMaximo.dataset.cantidad;
+      if (selMedida) selMedida.value = "unidad"; // el máximo sugerido está en unidades
       inpCantidad.focus();
       revisarCantidad();
     });

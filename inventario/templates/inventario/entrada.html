@@ -14,6 +14,7 @@
       {% endif %}
       <div class="row">
         <div class="col-sm-6">{% with campo=form.cantidad %}{% include "_campo.html" %}{% endwith %}</div>
+        <div class="col-sm-6" id="bloque-medida">{% with campo=form.medida %}{% include "_campo.html" %}{% endwith %}</div>
         <div class="col-sm-6 mb-3">
           <label class="form-label" for="unidad">Unidad</label>
           <input type="text" id="unidad" class="form-control" value="" placeholder="kg / unidad / paquete" readonly tabindex="-1">

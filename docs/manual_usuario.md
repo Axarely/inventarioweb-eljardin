@@ -16,6 +16,8 @@
 4. Para salir, pulse **Cerrar sesión** al final del menú.
 
 - Si se equivoca 5 veces seguidas con la contraseña, la cuenta se bloquea **15 minutos**.
+- **Cantidades:** se escriben directamente. Para libra y media puede escribir `1.5`, `1,5`, `1 1/2` o
+  `1 y media`.
 - Si pasan 30 minutos sin usar el sistema, tendrá que volver a entrar.
 - ¿Olvidó la contraseña? Pídale a un dueño que la restablezca desde **Usuarios → Contraseña**.
 
@@ -81,6 +83,8 @@ Los movimientos nunca se borran: quedan en el historial marcados como "Anulado".
   Latas y aderezos, Verduras, Desechables y limpieza, Varios). Si necesita otra, escríbala en
   **«¿No existe la categoría? Agréguela aquí»** al crear o editar un producto, o en la página Categorías.
   Las categorías agregadas se pueden **eliminar** si ningún producto las usa; las fijas no.
+  Si intenta agregar una que ya existe, aunque la escriba sin tilde o en singular ("proteina"), el sistema
+  avisa **«La categoría Proteínas ya existe»** y no la duplica.
 - **Usuarios:** cree usuarios con su rol; los encargados necesitan una sucursal. Edítelos, desactívelos o
   restablezca su contraseña.
 - **Solicitudes de acceso:** el número junto a **Usuarios** indica cuántas personas pidieron una cuenta.

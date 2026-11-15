@@ -49,8 +49,8 @@
           <form method="post" action="{% url 'inventario:peso_real' %}" class="d-flex gap-2 align-items-center">{% csrf_token %}
             <input type="hidden" name="control" value="{{ c.pk }}">
             <label class="visually-hidden" for="peso-{{ c.pk }}">Peso real de {{ c.entrada.producto.nombre }}</label>
-            <input type="number" id="peso-{{ c.pk }}" name="peso_real" class="form-control form-control-sm" style="max-width: 8rem"
-                   step="0.01" min="0" max="{{ c.entrada.cantidad|cantidad }}" placeholder="0.00" required>
+            <input type="text" inputmode="decimal" autocomplete="off" data-cantidad="1" id="peso-{{ c.pk }}" name="peso_real"
+                   class="form-control form-control-sm" style="max-width: 8rem" placeholder="Ej.: 8 o 7 1/2" required>
             <span class="small">{{ c.entrada.producto.unidad_medida }}</span>
             <button type="submit" class="btn btn-sm btn-primario">Registrar</button>
           </form>

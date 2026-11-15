@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django import forms
 
-from config.ui import FormularioBootstrapMixin
+from config.ui import CampoCantidad, FormularioBootstrapMixin
 from proveedores.servicios import proveedores_activos
 from usuarios.models import Producto
 
@@ -18,11 +18,8 @@ def _campo_producto():
 
 
 def _campo_cantidad(etiqueta):
-    # UC02/UC03 E1: cantidad numérica y positiva.
-    return forms.DecimalField(
-        label=etiqueta, max_digits=10, decimal_places=2, min_value=Decimal("0.01"),
-        widget=forms.NumberInput(attrs={"step": "0.01", "min": "0.01", "placeholder": "0.00"}),
-    )
+    # UC02/UC03 E1: cantidad numérica y positiva. D-35: se escribe (1.5, 1,5, 1 1/2), sin flechas.
+    return CampoCantidad(label=etiqueta, min_value=Decimal("0.01"))
 
 
 class EntradaForm(FormularioBootstrapMixin, forms.Form):  # RF-02, RF-11 (Fig. 15)
@@ -37,10 +34,7 @@ class EntradaForm(FormularioBootstrapMixin, forms.Form):  # RF-02, RF-11 (Fig. 1
 
 class PesoRealForm(FormularioBootstrapMixin, forms.Form):  # D-33: segunda entrada de proteínas
     control = forms.IntegerField(widget=forms.HiddenInput)
-    peso_real = forms.DecimalField(
-        label="Peso real", max_digits=10, decimal_places=2, min_value=Decimal("0"),
-        widget=forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "0.00"}),
-    )
+    peso_real = CampoCantidad(label="Peso real", min_value=Decimal("0"))
 
 
 class ConsumoForm(FormularioBootstrapMixin, forms.Form):  # RF-07 (D-02): consumo de la sucursal
@@ -50,10 +44,7 @@ class ConsumoForm(FormularioBootstrapMixin, forms.Form):  # RF-07 (D-02): consum
 
 class DiscrepanciaForm(FormularioBootstrapMixin, forms.Form):  # RF-13
     movimiento = forms.ModelChoiceField(label="Envío recibido", queryset=None, empty_label="Seleccionar envío…")
-    cantidad_recibida = forms.DecimalField(
-        label="Cantidad realmente recibida", max_digits=10, decimal_places=2, min_value=Decimal("0"),
-        widget=forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
-    )
+    cantidad_recibida = CampoCantidad(label="Cantidad realmente recibida", min_value=Decimal("0"))
 
     def __init__(self, *args, envios=None, **kwargs):
         super().__init__(*args, **kwargs)

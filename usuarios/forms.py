@@ -3,7 +3,7 @@ from django.contrib.auth import password_validation
 from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.models import Permission
 
-from config.ui import FormularioBootstrapMixin
+from config.ui import CampoCantidad, FormularioBootstrapMixin
 
 from .models import Categoria, Producto, Rol, Usuario
 from .roles import APPS_CON_PERMISOS
@@ -95,6 +95,7 @@ class RolForm(FormularioBootstrapMixin, forms.ModelForm):  # RF-10: roles person
 
 
 class ProductoForm(FormularioBootstrapMixin, forms.ModelForm):  # RF-09, D-32
+    stock_minimo = CampoCantidad(label="Stock mínimo", min_value=0)  # D-35: se escribe, sin flechas
     nueva_categoria = forms.CharField(
         label="¿No existe la categoría? Agréguela aquí", required=False, max_length=60,
         help_text="Si escribe una categoría nueva, se crea y se asigna a este producto.",
@@ -103,7 +104,7 @@ class ProductoForm(FormularioBootstrapMixin, forms.ModelForm):  # RF-09, D-32
     class Meta:
         model = Producto
         fields = ["nombre", "categoria", "nueva_categoria", "unidad_medida", "controla_merma", "stock_minimo"]
-        widgets = {"stock_minimo": forms.NumberInput(attrs={"step": "0.01", "min": "0"})}
+
 
     def __init__(self, *args, puede_crear_categoria=False, **kwargs):
         super().__init__(*args, **kwargs)
@@ -117,8 +118,16 @@ class ProductoForm(FormularioBootstrapMixin, forms.ModelForm):  # RF-09, D-32
         datos = super().clean()
         nueva = " ".join((datos.get("nueva_categoria") or "").split())
         if nueva:
-            # Sin distinguir mayúsculas: si ya existe se reutiliza; si no, se crea. Quien guarda el
-            # formulario lo hace en una transacción, así que si el producto no se guarda, tampoco esto.
+            # D-35: si ya existe (sin importar mayúsculas, tildes ni singular/plural) se avisa y no se duplica.
+            existente = Categoria.buscar_equivalente(nueva)
+            if existente is not None:
+                self.add_error(
+                    "nueva_categoria",
+                    f"La categoría «{existente}» ya existe. Selecciónela en la lista «Categoría».",
+                )
+                return datos
+            # Quien guarda el formulario lo hace en una transacción: si el producto no se guarda, la
+            # categoría tampoco queda creada.
             datos["categoria"], creada = Categoria.obtener_o_crear(nueva)
             self.instance.categoria = datos["categoria"]
             self.categoria_creada = datos["categoria"] if creada else None
@@ -135,6 +144,8 @@ class CategoriaForm(FormularioBootstrapMixin, forms.ModelForm):  # D-32
 
     def clean_nombre(self):
         nombre = " ".join(self.cleaned_data["nombre"].split())
-        if Categoria.objects.filter(nombre__iexact=nombre).exists():
-            raise forms.ValidationError(f"La categoría «{nombre}» ya existe.")
+        existente = Categoria.buscar_equivalente(nombre)  # D-35: tildes y singular/plural incluidos
+        if existente is not None:
+            fija = " (es una categoría fija)" if existente.es_base else ""
+            raise forms.ValidationError(f"La categoría «{existente}» ya existe{fija}.")
         return nombre[:1].upper() + nombre[1:]

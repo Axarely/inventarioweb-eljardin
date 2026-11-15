@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.functions import Lower
+import unicodedata
 from django.utils import timezone
 
 
@@ -155,13 +156,38 @@ class Categoria(models.Model):
             raise ValidationError(f"«{self.nombre}» es una categoría fija y no se puede eliminar.")
         return super().delete(*args, **kwargs)
 
+    @staticmethod
+    def clave(nombre):
+        """
+        D-35: forma comparable de un nombre, para no duplicar categorías. Ignora mayúsculas, tildes,
+        espacios de más y singular/plural: "proteina", "Proteínas" y "PROTEINAS" dan la misma clave.
+        """
+        sin_tildes = "".join(
+            c for c in unicodedata.normalize("NFD", (nombre or "").lower()) if unicodedata.category(c) != "Mn"
+        )
+        palabras = []
+        for palabra in sin_tildes.split():
+            if len(palabra) > 3 and palabra.endswith("s"):
+                palabra = palabra[:-1]  # plural simple: "proteinas" -> "proteina", "desechables" -> "desechable"
+            palabras.append(palabra)
+        return " ".join(palabras)
+
+    @classmethod
+    def buscar_equivalente(cls, nombre, excluir_pk=None):
+        """Devuelve la categoría que ya existe con un nombre equivalente, o None."""
+        clave = cls.clave(nombre)
+        for categoria in cls.objects.exclude(pk=excluir_pk):
+            if cls.clave(categoria.nombre) == clave:
+                return categoria
+        return None
+
     @classmethod
     def obtener_o_crear(cls, nombre):
-        """Busca sin distinguir mayúsculas; si no existe, la crea (agregar categoría desde el producto)."""
+        """Busca una categoría equivalente (D-35); si no existe, la crea."""
         nombre = " ".join((nombre or "").split())
         if not nombre:
             raise ValidationError("Escriba el nombre de la categoría.")
-        existente = cls.objects.filter(nombre__iexact=nombre).first()
+        existente = cls.buscar_equivalente(nombre)
         if existente:
             return existente, False
         return cls.objects.create(nombre=nombre[:1].upper() + nombre[1:]), True

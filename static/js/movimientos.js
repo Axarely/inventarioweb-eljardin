@@ -15,6 +15,28 @@
   const elMerma = document.getElementById("panel-merma");
   let disponible = null;
 
+  // D-35: misma lectura que el servidor (config/ui.py): "1.5", "1,5", "1 1/2", "1 y media".
+  function leerCantidad(texto) {
+    let t = String(texto || "").trim().toLowerCase().replace(/,/g, ".").replace(/\s+/g, " ");
+    t = t.replace("tres cuartos", "3/4").replace("media", "1/2").replace("medio", "1/2").replace("cuarto", "1/4");
+    t = t.replace(/ y /g, " ");
+    if (!t) return NaN;
+    const partes = t.split(" ");
+    if (partes.length > 2) return NaN;
+    let total = 0;
+    for (const parte of partes) {
+      if (parte.includes("/")) {
+        const [n, d] = parte.split("/").map(Number);
+        if (!d) return NaN;
+        total += n / d;
+      } else {
+        if (!/^\d*\.?\d+$/.test(parte)) return NaN;
+        total += Number(parte);
+      }
+    }
+    return total;
+  }
+
   function pill(nivel, texto) {
     const span = document.createElement("span");
     span.className = "pill pill-" + nivel;
@@ -24,7 +46,7 @@
 
   function revisarCantidad() {
     if (!validarMaximo || disponible === null || !inpCantidad) return;
-    const pedida = parseFloat(inpCantidad.value);
+    const pedida = leerCantidad(inpCantidad.value);
     elPill.replaceChildren(
       !isNaN(pedida) && pedida > disponible
         ? pill("agotado", "Insuficiente: máximo " + disponible)

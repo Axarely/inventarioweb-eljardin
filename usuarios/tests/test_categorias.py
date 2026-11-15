@@ -59,10 +59,26 @@ def test_rf09_producto_con_categoria_nueva(cliente_de, dueno):
     assert "Categoría «Bebidas» agregada." in respuesta.content.decode()
 
 
-def test_rf09_categoria_nueva_que_ya_existe_se_reutiliza(cliente_de, dueno):
-    cliente_de(dueno).post(URL_CREAR_PRODUCTO, producto(nueva_categoria="LÁCTEOS"))
-    assert Producto.objects.get(nombre="Harina").categoria == categoria_fija("Lácteos")
-    assert Categoria.objects.filter(nombre__iexact="lácteos").count() == 1
+@pytest.mark.parametrize("escrita", ["LÁCTEOS", "lacteos", "Lácteo", "  lacteo "])
+def test_d35_categoria_nueva_que_ya_existe_avisa(cliente_de, dueno, escrita):
+    """D-35: sin importar mayúsculas, tildes ni singular/plural, se avisa que ya existe y no se duplica."""
+    respuesta = cliente_de(dueno).post(URL_CREAR_PRODUCTO, producto(nueva_categoria=escrita))
+    assert "La categoría «Lácteos» ya existe" in str(respuesta.context["form"].errors["nueva_categoria"])
+    assert not Producto.objects.filter(nombre="Harina").exists()
+    assert Categoria.objects.filter(nombre__icontains="cteo").count() == 1
+
+
+@pytest.mark.parametrize("escrita", ["proteina", "PROTEINAS", "Proteínas", "Desechable y limpiezas", "verdura"])
+def test_d35_pagina_categorias_avisa_que_existe_y_es_fija(cliente_de, dueno, escrita):
+    total = Categoria.objects.count()
+    respuesta = cliente_de(dueno).post(reverse("usuarios:categoria_crear"), {"nombre": escrita})
+    assert "ya existe (es una categoría fija)" in respuesta.content.decode()
+    assert Categoria.objects.count() == total
+
+
+def test_d35_categoria_realmente_nueva_se_agrega(cliente_de, dueno):
+    cliente_de(dueno).post(reverse("usuarios:categoria_crear"), {"nombre": "panadería"})
+    assert Categoria.objects.filter(nombre="Panadería", es_base=False).exists()
 
 
 def test_rf09_categoria_obligatoria(cliente_de, dueno):

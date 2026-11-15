@@ -1,4 +1,6 @@
 """Utilidades de presentación compartidas por las apps (guía de estilo, DEDS Fig. 21)."""
+from decimal import ROUND_HALF_UP, Decimal
+
 from django import forms
 from django.utils.http import url_has_allowed_host_and_scheme
 
@@ -19,6 +21,72 @@ class FormularioBootstrapMixin:
             else:
                 clase = "form-control"
             widget.attrs["class"] = f"{widget.attrs.get('class', '')} {clase}".strip()
+
+
+# De la frase más larga a la más corta: "tres cuartos" debe reemplazarse antes que "cuarto".
+_FRACCIONES_EN_PALABRAS = {"tres cuartos": "3/4", "media": "1/2", "medio": "1/2", "cuarto": "1/4"}
+
+
+def interpretar_cantidad(texto):
+    """
+    Cantidad escrita a mano (D-35): "1.5", "1,5", "1 1/2", "1 y 1/2", "1 y media", "1/2", "media".
+    Devuelve un Decimal con 2 decimales o lanza ValueError.
+    """
+    limpio = " ".join(str(texto).strip().lower().replace(",", ".").split())
+    for palabras, fraccion in _FRACCIONES_EN_PALABRAS.items():
+        limpio = limpio.replace(palabras, fraccion)
+    limpio = limpio.replace(" y ", " ")
+    if not limpio:
+        raise ValueError("vacío")
+    total = Decimal("0")
+    partes = limpio.split(" ")
+    if len(partes) > 2:
+        raise ValueError(texto)
+    for parte in partes:
+        if "/" in parte:
+            numerador, _, denominador = parte.partition("/")
+            if not denominador or Decimal(denominador) == 0:
+                raise ValueError(texto)
+            total += Decimal(numerador) / Decimal(denominador)
+        else:
+            total += Decimal(parte)
+    if len(partes) == 2 and "/" not in partes[1]:
+        raise ValueError(texto)  # "1 5" no es una cantidad válida
+    return total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+class CampoCantidad(forms.DecimalField):
+    """
+    D-35: cantidad que se ESCRIBE (sin flechas de subir y bajar). Acepta decimales con punto o coma y
+    fracciones: libra y media = "1.5", "1,5", "1 1/2" o "1 y media".
+    """
+
+    AYUDA = "Escriba la cantidad: por ejemplo 1.5, 1,5 o 1 1/2 (libra y media)."
+
+    def __init__(self, *args, placeholder="Ej.: 1.5 o 1 1/2", **kwargs):
+        kwargs.setdefault("max_digits", 10)
+        kwargs.setdefault("decimal_places", 2)
+        kwargs.setdefault("help_text", self.AYUDA)
+        kwargs["widget"] = forms.TextInput(attrs={
+            "inputmode": "decimal", "autocomplete": "off", "placeholder": placeholder, "data-cantidad": "1",
+        })
+        super().__init__(*args, **kwargs)
+
+    def to_python(self, value):
+        if value in self.empty_values:
+            return None
+        if isinstance(value, Decimal):
+            return value
+        try:
+            return interpretar_cantidad(value)
+        except (ValueError, ArithmeticError):
+            raise forms.ValidationError(
+                "Escriba una cantidad válida, por ejemplo 1.5, 1,5 o 1 1/2.", code="invalid"
+            )
+
+    def widget_attrs(self, widget):
+        # Sin min/max/step: el campo es de texto, no un control de subir y bajar.
+        return {}
 
 
 class FormularioMixin:

@@ -66,7 +66,7 @@ def sincronizar_categorias_base():
     if Categoria._meta.db_table not in connection.introspection.table_names():
         return  # migración parcial o revertida a antes de usuarios.0003
     for orden, nombre in enumerate(CATEGORIAS_BASE, start=1):
-        categoria = Categoria.objects.filter(nombre__iexact=nombre).first()
+        categoria = Categoria.buscar_equivalente(nombre)  # D-35: también "Proteinas" sin tilde, etc.
         if categoria is None:
             Categoria.objects.create(nombre=nombre, es_base=True, orden=orden)
         elif (categoria.nombre, categoria.es_base, categoria.orden) != (nombre, True, orden):

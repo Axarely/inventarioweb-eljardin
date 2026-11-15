@@ -31,7 +31,7 @@ PRODUCTOS = [
     ("Arroz 1 lb", "Abarrotes", "u.", 20),
     ("Servilletas", "Desechables y limpieza", "paq.", 5),
     ("Refresco de cola 2L", "Varios", "u.", 12),
-    ("Queso mozzarella", "Lácteos", "unidad", 8),
+    ("Queso mozzarella", "Lácteos", "lb", 8),  # queso rallado, bolsa de 5 lb (D-39)
 ]
 
 PROVEEDORES = [

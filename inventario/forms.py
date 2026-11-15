@@ -23,7 +23,7 @@ class PresentacionMixin:
     cantidad se convierte a unidades (3 paquetes x 6 = 18) antes de llegar a los servicios.
     """
 
-    MEDIDAS = [("unidad", "Unidades"), ("presentacion", "Cajas o paquetes")]
+    MEDIDAS = [("unidad", "Unidad de medida"), ("presentacion", "Cajas, paquetes o bolsas")]
     cantidad_original = None
 
     def _agregar_medida(self):
@@ -39,7 +39,7 @@ class PresentacionMixin:
             if not producto.usa_presentacion:
                 self.add_error(
                     "medida",
-                    f"{producto} no tiene configurado cuántas unidades trae cada caja o paquete: regístrelo en "
+                    f"{producto} no tiene configurado cuánto trae cada caja, paquete o bolsa: regístrelo en "
                     "unidades o configúrelo en Catálogo.",
                 )
             else:

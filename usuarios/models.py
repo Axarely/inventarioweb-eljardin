@@ -218,16 +218,18 @@ class Producto(models.Model):
     class Presentacion(models.TextChoices):
         CAJA = "caja", "Caja"
         PAQUETE = "paquete", "Paquete"
+        BOLSA = "bolsa", "Bolsa"  # D-39: p. ej. queso mozzarella rallado, bolsa de 5 lb
 
-    PLURAL_PRESENTACION = {"caja": "cajas", "paquete": "paquetes"}
+    PLURAL_PRESENTACION = {"caja": "cajas", "paquete": "paquetes", "bolsa": "bolsas"}
 
     presentacion = models.CharField(
         "presentación", max_length=10, choices=Presentacion.choices, blank=True,
-        help_text="Si el producto llega en cajas o paquetes que traen varias unidades.",
+        help_text="Si el producto se compra en cajas, paquetes o bolsas.",
     )
     unidades_por_presentacion = models.PositiveIntegerField(
-        "unidades por caja o paquete", null=True, blank=True,
-        help_text="Cuántas unidades trae cada caja o paquete (por ejemplo, 6).",
+        "cantidad por presentación", null=True, blank=True,
+        help_text="Cuánto trae cada caja, paquete o bolsa, en la unidad de medida del producto "
+                  "(por ejemplo, 24 unidades o 5 lb).",
     )
 
     class Meta:
@@ -247,7 +249,7 @@ class Producto(models.Model):
         if self.controla_merma and self.categoria_id and self.categoria.nombre != CATEGORIA_CON_MERMA:
             raise ValidationError({"controla_merma": "La merma solo aplica a productos de la categoría Proteínas."})
         if self.unidades_por_presentacion and not self.presentacion:
-            raise ValidationError({"presentacion": "Indique si son cajas o paquetes."})
+            raise ValidationError({"presentacion": "Indique la presentación: caja, paquete o bolsa."})
         if self.unidades_por_presentacion is not None and self.unidades_por_presentacion < 1:
             raise ValidationError({"unidades_por_presentacion": "Debe ser al menos 1."})
 

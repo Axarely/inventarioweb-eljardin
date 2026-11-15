@@ -49,7 +49,7 @@ def test_d37_catalogo_de_lacteos():
 
 def test_d37_textos_de_presentacion(queso, leche):
     assert queso.descripcion_presentacion() == "Paquete de 6 unidades"
-    assert leche.descripcion_presentacion() == "Caja (unidades sin definir)"
+    assert leche.descripcion_presentacion() == "Caja"  # sin cantidad definida: solo el nombre corto
     assert queso.en_presentaciones(Decimal("20")) == "3 paquetes + 2 unidades"
     assert queso.en_presentaciones(Decimal("6")) == "1 paquete"
     assert leche.en_presentaciones(Decimal("20")) == ""  # sin dato, no se inventa
@@ -138,7 +138,8 @@ def test_d37_unidades_sin_presentacion_se_rechaza(cliente_de, dueno):
 
 def test_d37_catalogo_muestra_falta_definir(cliente_de, dueno, leche):
     html = cliente_de(dueno).get(reverse("usuarios:productos"), {"categoria": categoria_fija("Lácteos").pk}).content.decode()
-    assert "Paquete de 16 unidades" in html and "Bolsa de 5 lb" in html and "Falta definir" in html
+    assert "Paquete de 16 unidades" in html and "Bolsa de 5 lb" in html
+    assert "<td>Caja</td>" in html and "Falta definir" not in html and "sin definir" not in html
 
 
 def test_d38_queso_sula_paquete_de_16(cliente_de, bodeguero, bodega, proveedor):

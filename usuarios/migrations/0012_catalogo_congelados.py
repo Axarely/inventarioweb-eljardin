@@ -5,8 +5,8 @@ D-40: catálogo de Congelados (dato de la clienta, 2026-11-15).
 - Papas: por unidad, se compran en caja.
 - Tocino y Yuca: por libra, sin presentación.
 
-Las unidades que trae cada paquete o caja NO se conocen todavía: quedan en blanco ("Falta definir" en el
-Catálogo) y, hasta que el dueño las defina, esos productos se registran solo por unidad. Sin merma: es
+Las unidades que trae cada paquete o caja NO se conocen todavía: quedan en blanco (en el Catálogo se
+ve solo "Paquete" o "Caja") y, hasta que el dueño las defina, esos productos se registran solo por unidad. Sin merma: es
 exclusiva de Proteínas (D-38). Stock mínimo en 0 (lo define el dueño). No duplica productos existentes.
 """
 from django.db import migrations

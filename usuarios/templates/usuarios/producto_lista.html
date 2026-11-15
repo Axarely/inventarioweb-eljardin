@@ -32,7 +32,7 @@
       <td>{{ p.nombre }}</td>
       <td>{{ p.categoria }}</td>
       <td>{{ p.unidad_medida }}</td>
-      <td>{% if p.presentacion %}{{ p.descripcion_presentacion }}{% if not p.unidades_por_presentacion %} <span class="pill pill-bajo">Falta definir</span>{% endif %}{% else %}—{% endif %}</td>
+      <td>{% if p.presentacion %}{{ p.descripcion_presentacion }}{% else %}—{% endif %}</td>
       <td class="text-end">{{ p.stock_minimo|cantidad }}</td>
       <td>{% if p.activo %}<span class="pill pill-normal">Activo</span>{% else %}<span class="pill pill-inactivo">Inactivo</span>{% endif %}</td>
       <td class="text-end text-nowrap">

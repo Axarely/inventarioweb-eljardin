@@ -268,11 +268,11 @@ class Producto(models.Model):
         return self.get_presentacion_display().lower() if cantidad == 1 else self.PLURAL_PRESENTACION[self.presentacion]
 
     def descripcion_presentacion(self):
-        """"Paquete de 6 unidad", "Caja (unidades sin definir)" o ""."""
+        """"Paquete de 16 unidades", "Bolsa de 5 lb"; solo "Caja" si aún no se sabe cuánto trae; o ""."""
         if not self.presentacion:
             return ""
         if not self.unidades_por_presentacion:
-            return f"{self.get_presentacion_display()} (unidades sin definir)"
+            return self.get_presentacion_display()  # nombre corto, a pedido de la clienta
         return f"{self.get_presentacion_display()} de {self.unidades_por_presentacion} {self.unidad_en(self.unidades_por_presentacion)}"
 
     def en_presentaciones(self, cantidad):

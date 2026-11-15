@@ -202,7 +202,7 @@ def test_d40_catalogo_de_congelados():
     congelados = {p.nombre: (p.unidad_medida, p.presentacion, p.unidades_por_presentacion, p.controla_merma)
                   for p in Producto.objects.filter(categoria__nombre="Congelados")}
     assert congelados == {
-        "Nuggets de pollo": ("unidad", "paquete", None, False),
+        "Nuggets de pollo": ("paquete", "", None, False),  # D-41: se cuentan por paquete
         "Papas": ("unidad", "caja", None, False),
         "Dedos de queso": ("unidad", "paquete", None, False),
         "Tocino": ("lb", "", None, False),
@@ -211,11 +211,18 @@ def test_d40_catalogo_de_congelados():
 
 
 def test_d40_congelados_sin_cantidad_definida_se_registran_por_unidad(cliente_de, bodeguero, bodega, proveedor):
-    nuggets = Producto.objects.get(nombre="Nuggets de pollo")
+    papas = Producto.objects.get(nombre="Papas")
     cliente = cliente_de(bodeguero)
-    por_paquete = cliente.post(reverse("inventario:entrada"), {
-        "producto": nuggets.pk, "cantidad": "2", "medida": "presentacion", "proveedor": proveedor.pk,
+    por_caja = cliente.post(reverse("inventario:entrada"), {
+        "producto": papas.pk, "cantidad": "2", "medida": "presentacion", "proveedor": proveedor.pk,
     })
-    assert "medida" in por_paquete.context["form"].errors
-    cliente.post(reverse("inventario:entrada"), {"producto": nuggets.pk, "cantidad": "30", "proveedor": proveedor.pk})
-    assert existencia(nuggets, bodega) == Decimal("30")
+    assert "medida" in por_caja.context["form"].errors
+    cliente.post(reverse("inventario:entrada"), {"producto": papas.pk, "cantidad": "30", "proveedor": proveedor.pk})
+    assert existencia(papas, bodega) == Decimal("30")
+
+
+def test_d41_nuggets_se_cuentan_por_paquete(cliente_de, bodeguero, bodega, proveedor):
+    nuggets = Producto.objects.get(nombre="Nuggets de pollo")
+    assert nuggets.unidad_medida == "paquete" and nuggets.descripcion_presentacion() == ""
+    cliente_de(bodeguero).post(reverse("inventario:entrada"), {"producto": nuggets.pk, "cantidad": "5", "proveedor": proveedor.pk})
+    assert existencia(nuggets, bodega) == Decimal("5")

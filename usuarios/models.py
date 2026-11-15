@@ -132,6 +132,9 @@ CATEGORIAS_BASE = [
 ]
 
 
+CATEGORIA_CON_MERMA = "Proteínas"  # D-38: única categoría con control de merma
+
+
 class Categoria(models.Model):
     """D-32 (RF-09): categoría de productos. Las base son fijas; el resto se agrega o elimina."""
 
@@ -240,6 +243,9 @@ class Producto(models.Model):
 
     def clean(self):
         super().clean()
+        # D-38: la merma (entrada en dos pasos) es exclusiva de la categoría Proteínas.
+        if self.controla_merma and self.categoria_id and self.categoria.nombre != CATEGORIA_CON_MERMA:
+            raise ValidationError({"controla_merma": "La merma solo aplica a productos de la categoría Proteínas."})
         if self.unidades_por_presentacion and not self.presentacion:
             raise ValidationError({"presentacion": "Indique si son cajas o paquetes."})
         if self.unidades_por_presentacion is not None and self.unidades_por_presentacion < 1:

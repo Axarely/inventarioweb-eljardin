@@ -16,7 +16,7 @@ from config.ui import FormularioMixin, siguiente_seguro
 from .forms import (
     CategoriaForm, ProductoForm, RestablecerPasswordForm, RolForm, UsuarioCrearForm, UsuarioEditarForm,
 )
-from .models import Categoria, Producto, Rol, Usuario
+from .models import CATEGORIA_CON_MERMA, Categoria, Producto, Rol, Usuario
 
 
 # --- Usuarios (RF-10) ---------------------------------------------------------------------------
@@ -204,10 +204,19 @@ class ProductoFormularioMixin:  # D-32
     """Guarda el producto y, si se escribió, la categoría nueva en UNA transacción: si el producto no
     se guarda (por ejemplo, nombre repetido), la categoría tampoco queda creada."""
 
+    template_name = "usuarios/producto_form.html"
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["puede_crear_categoria"] = self.request.user.has_perm("usuarios.add_categoria")
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        # D-38: la casilla "controla merma" solo se muestra para Proteínas
+        proteinas = Categoria.objects.filter(nombre=CATEGORIA_CON_MERMA).first()
+        contexto["categoria_merma_id"] = proteinas.pk if proteinas else ""
+        return contexto
 
     def post(self, request, *args, **kwargs):
         with transaction.atomic():

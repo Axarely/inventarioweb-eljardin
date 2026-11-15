@@ -50,10 +50,10 @@ anule la merma en el **Historial** y vuelva a registrarlo.
 
 **Productos que vienen en cajas o paquetes**
 
-Algunos productos se cuentan por **unidad** pero llegan en **cajas o paquetes** (por ejemplo, el queso Zula
-viene en paquetes de 6). Al elegirlos aparece **«Registrar en»**: escoja **Unidades** o **Paquetes**. Si
-registra 3 paquetes, el sistema suma 18 unidades. Las existencias muestran las dos cosas: "18 unidades
-(3 paquetes)".
+Algunos productos se cuentan por **unidad** pero llegan en **cajas o paquetes** (por ejemplo, el queso Sula
+viene en paquetes de 16 y la leche entera en cajas de 24). Al elegirlos aparece **«Registrar en»**: escoja **Unidades** o **Paquetes**. Si
+registra 2 paquetes de queso Sula, el sistema suma 32 unidades. Las existencias muestran las dos cosas:
+"32 unidades = 2 paquetes".
 
 **Enviar mercadería a una sucursal**
 1. Menú → **Salidas**.
@@ -88,8 +88,8 @@ Los movimientos nunca se borran: quedan en el historial marcados como "Anulado".
   alerta.
 - **Presentación (cajas o paquetes):** al editar un producto indique si llega en **caja** o **paquete** y
   **cuántas unidades trae**. Si falta ese número (la lista muestra «Falta definir»), el producto solo se
-  puede registrar en unidades. **Pendiente:** definir cuántas unidades trae la caja de Leche entera y la de
-  Margarina con ajo.
+  puede registrar en unidades.
+- **Controla merma:** la casilla solo aparece (y solo se puede activar) en productos de **Proteínas**.
 - **Categorías** (botón en Catálogo): hay 9 fijas (Proteínas, Lácteos, Congelados, Concentrados, Abarrotes,
   Latas y aderezos, Verduras, Desechables y limpieza, Varios). Si necesita otra, escríbala en
   **«¿No existe la categoría? Agréguela aquí»** al crear o editar un producto, o en la página Categorías.

@@ -1,0 +1,20 @@
+{% extends "formulario.html" %}
+{% block scripts %}
+<script>
+  // D-38: "Controla merma" solo aplica a la categoría Proteínas; en las demás se oculta y se desmarca.
+  (function () {
+    var categoria = document.getElementById("id_categoria");
+    var merma = document.getElementById("id_controla_merma");
+    var idProteinas = "{{ categoria_merma_id }}";
+    if (!categoria || !merma) return;
+    var bloque = merma.closest(".form-check") || merma.parentElement;
+    function actualizar() {
+      var esProteina = categoria.value === idProteinas;
+      bloque.hidden = !esProteina;
+      if (!esProteina) merma.checked = false;
+    }
+    categoria.addEventListener("change", actualizar);
+    actualizar();
+  })();
+</script>
+{% endblock %}

@@ -15,14 +15,17 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def queso(db):
-    """Queso Zula (migración usuarios.0008): por unidad, paquete de 6."""
-    return Producto.objects.get(nombre="Queso Zula")
+    """Queso mozzarella (migración usuarios.0008): por unidad, paquete de 6."""
+    return Producto.objects.get(nombre="Queso mozzarella")
 
 
 @pytest.fixture
 def leche(db):
-    """Leche entera: por caja, pero sin definir cuántas unidades trae."""
-    return Producto.objects.get(nombre="Leche entera")
+    """Producto que llega por caja, pero todavía sin definir cuántas unidades trae."""
+    return Producto.objects.create(
+        nombre="Yogur bebible", categoria=categoria_fija("Lácteos"), unidad_medida="unidad", stock_minimo=0,
+        presentacion="caja",
+    )
 
 
 def existencia(producto, ubicacion):
@@ -33,11 +36,11 @@ def existencia(producto, ubicacion):
 def test_d37_catalogo_de_lacteos():
     lacteos = {p.nombre: (p.unidad_medida, p.presentacion, p.unidades_por_presentacion)
                for p in Producto.objects.filter(categoria__nombre="Lácteos")}
-    assert lacteos == {
-        "Leche entera": ("unidad", "caja", None),
+    assert lacteos == {  # con las correcciones de la clienta (migración usuarios.0009, D-38)
+        "Leche entera": ("unidad", "caja", 24),
         "Queso mozzarella": ("unidad", "paquete", 6),
-        "Queso Zula": ("unidad", "paquete", 6),
-        "Margarina con ajo": ("unidad", "caja", None),
+        "Queso Sula": ("unidad", "paquete", 16),
+        "Margarina con ajo": ("unidad", "", None),
     }
 
 
@@ -54,7 +57,7 @@ def test_d37_entrada_por_paquetes(cliente_de, bodeguero, bodega, queso, proveedo
         "producto": queso.pk, "cantidad": "3", "medida": "presentacion", "proveedor": proveedor.pk,
     }, follow=True)
     assert existencia(queso, bodega) == Decimal("18")
-    assert "Entrada registrada: +18 unidad (3 paquetes de 6) de Queso Zula" in respuesta.content.decode()
+    assert "Entrada registrada: +18 unidad (3 paquetes de 6) de Queso mozzarella" in respuesta.content.decode()
 
 
 def test_d37_entrada_en_unidades_por_defecto(cliente_de, bodeguero, bodega, queso, proveedor):
@@ -130,6 +133,49 @@ def test_d37_unidades_sin_presentacion_se_rechaza(cliente_de, dueno):
     assert "Indique si son cajas o paquetes." in str(respuesta.context["form"].errors["presentacion"])
 
 
-def test_d37_catalogo_muestra_falta_definir(cliente_de, dueno):
+def test_d37_catalogo_muestra_falta_definir(cliente_de, dueno, leche):
     html = cliente_de(dueno).get(reverse("usuarios:productos"), {"categoria": categoria_fija("Lácteos").pk}).content.decode()
     assert "Paquete de 6 unidades" in html and "Falta definir" in html
+
+
+def test_d38_queso_sula_paquete_de_16(cliente_de, bodeguero, bodega, proveedor):
+    sula = Producto.objects.get(nombre="Queso Sula")
+    assert sula.descripcion_presentacion() == "Paquete de 16 unidades"
+    cliente_de(bodeguero).post(reverse("inventario:entrada"), {
+        "producto": sula.pk, "cantidad": "2", "medida": "presentacion", "proveedor": proveedor.pk,
+    })
+    assert existencia(sula, bodega) == Decimal("32")
+
+
+def test_d38_leche_entera_caja_de_24_y_margarina_por_unidad():
+    leche = Producto.objects.get(nombre="Leche entera")
+    assert leche.descripcion_presentacion() == "Caja de 24 unidades" and leche.en_presentaciones(Decimal("50")) == "2 cajas + 2 unidades"
+    assert not Producto.objects.get(nombre="Margarina con ajo").usa_presentacion
+
+
+def test_d38_merma_solo_en_proteinas():
+    assert not Producto.objects.filter(controla_merma=True).exclude(categoria__nombre="Proteínas").exists()
+    assert Producto.objects.filter(controla_merma=True, categoria__nombre="Proteínas").count() == 8
+
+
+def test_d38_no_se_activa_merma_fuera_de_proteinas(cliente_de, dueno):
+    respuesta = cliente_de(dueno).post(reverse("usuarios:producto_crear"), {
+        "nombre": "Crema ácida", "categoria": categoria_fija("Lácteos").pk, "unidad_medida": "unidad",
+        "controla_merma": "on", "stock_minimo": "0",
+    })
+    assert "solo aplica a productos de la categoría Proteínas" in str(respuesta.context["form"].errors["controla_merma"])
+    assert not Producto.objects.filter(nombre="Crema ácida").exists()
+
+
+def test_d38_merma_si_se_activa_en_proteinas(cliente_de, dueno):
+    cliente_de(dueno).post(reverse("usuarios:producto_crear"), {
+        "nombre": "Costilla de cerdo", "categoria": categoria_fija("Proteínas").pk, "unidad_medida": "lb",
+        "controla_merma": "on", "stock_minimo": "0",
+    })
+    assert Producto.objects.get(nombre="Costilla de cerdo").controla_merma
+
+
+def test_d38_formulario_oculta_merma_segun_categoria(cliente_de, dueno):
+    html = cliente_de(dueno).get(reverse("usuarios:producto_crear")).content.decode()
+    assert 'id="id_controla_merma"' in html
+    assert f'var idProteinas = "{categoria_fija("Proteínas").pk}"' in html

@@ -88,8 +88,8 @@ Los movimientos nunca se borran: quedan en el historial marcados como "Anulado".
 - **Existencias:** elija cualquier ubicación (bodega o sucursales).
 - **Catálogo:** cree, edite y active o desactive productos. El stock mínimo define cuándo se genera una
   alerta.
-- **Presentación (cajas o paquetes):** al editar un producto indique si llega en **caja** o **paquete** y
-  **cuántas unidades trae**. Si falta ese número (la lista muestra solo «Caja» o «Paquete»), el producto solo se
+- **Presentación (cajas, paquetes, bolsas…):** al editar un producto **elija o escriba** cómo llega (caja, paquete,
+  bolsa, o cualquier otra, como «saco» o «bote») y **cuánto trae**. Si falta ese número (la lista muestra solo «Caja» o «Paquete»), el producto solo se
   puede registrar en unidades.
 - **Controla merma:** la casilla solo aparece (y solo se puede activar) en productos de **Proteínas**.
 - **Categorías** (botón en Catálogo): hay 9 fijas (Proteínas, Lácteos, Congelados, Concentrados, Abarrotes,

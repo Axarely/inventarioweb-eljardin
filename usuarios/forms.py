@@ -5,7 +5,7 @@ from django.contrib.auth import password_validation
 from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.models import Permission
 
-from config.ui import CampoCantidad, FormularioBootstrapMixin
+from config.ui import CampoCantidad, FormularioBootstrapMixin, TextoConSugerencias
 
 from .models import Categoria, Producto, Rol, Usuario
 from .roles import APPS_CON_PERMISOS
@@ -111,7 +111,8 @@ class ProductoForm(FormularioBootstrapMixin, forms.ModelForm):  # RF-09, D-32
         ]
         labels = {"presentacion": "Presentación de compra"}
         # D-35: también este número se escribe, sin flechas de subir y bajar
-        widgets = {"unidades_por_presentacion": forms.TextInput(attrs={
+        widgets = {"presentacion": TextoConSugerencias(attrs={"placeholder": "Ej.: caja, paquete, bolsa…"}),
+                   "unidades_por_presentacion": forms.TextInput(attrs={
             "inputmode": "numeric", "autocomplete": "off", "placeholder": "Ej.: 6"})}
 
 
@@ -122,6 +123,12 @@ class ProductoForm(FormularioBootstrapMixin, forms.ModelForm):  # RF-09, D-32
         if not puede_crear_categoria:
             del self.fields["nueva_categoria"]
         self.categoria_creada = None
+        # D-46: sugiere las presentaciones base y las que ya se han escrito en otros productos.
+        usadas = Producto.objects.exclude(presentacion="").values_list("presentacion", flat=True).distinct()
+        self.fields["presentacion"].widget.sugerencias = sorted(set(Producto.PRESENTACIONES_SUGERIDAS) | set(usadas))
+
+    def clean_presentacion(self):
+        return " ".join(self.cleaned_data["presentacion"].split()).lower()  # D-46: "Saco " -> "saco"
 
     def clean_unidad_medida(self):
         # D-36: el restaurante no trabaja en kilos; todo lo que se pesa va en libras.

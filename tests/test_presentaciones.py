@@ -133,7 +133,7 @@ def test_d37_unidades_sin_presentacion_se_rechaza(cliente_de, dueno):
         "nombre": "Yogur", "categoria": categoria_fija("Lácteos").pk, "unidad_medida": "unidad",
         "presentacion": "", "unidades_por_presentacion": "6", "stock_minimo": "0",
     })
-    assert "Indique la presentación: caja, paquete o bolsa." in str(respuesta.context["form"].errors["presentacion"])
+    assert "Indique la presentación (por ejemplo: caja, paquete o bolsa)." in str(respuesta.context["form"].errors["presentacion"])
 
 
 def test_d37_catalogo_muestra_falta_definir(cliente_de, dueno, leche):
@@ -222,3 +222,33 @@ def test_d41_nuggets_se_cuentan_por_paquete(cliente_de, bodeguero, bodega, prove
     assert nuggets.unidad_medida == "paquete" and nuggets.descripcion_presentacion() == ""
     cliente_de(bodeguero).post(reverse("inventario:entrada"), {"producto": nuggets.pk, "cantidad": "5", "proveedor": proveedor.nombre})
     assert existencia(nuggets, bodega) == Decimal("5")
+
+
+def test_d46_presentacion_escrita_a_mano(cliente_de, dueno, bodeguero, bodega, proveedor):
+    respuesta = cliente_de(dueno).post(reverse("usuarios:producto_crear"), {
+        "nombre": "Harina", "categoria": categoria_fija("Abarrotes").pk, "unidad_medida": "lb",
+        "presentacion": "  Saco ", "unidades_por_presentacion": "50", "stock_minimo": "0",
+    })
+    assert respuesta.status_code == 302
+    harina = Producto.objects.get(nombre="Harina")
+    assert harina.presentacion == "saco" and harina.descripcion_presentacion() == "Saco de 50 lb"
+    cliente_de(bodeguero).post(reverse("inventario:entrada"), {
+        "producto": harina.pk, "cantidad": "2", "medida": "presentacion", "proveedor": "",
+    })
+    assert existencia(harina, bodega) == Decimal("100")
+    assert harina.en_presentaciones(Decimal("120")) == "2 sacos + 20 lb"
+
+
+def test_d46_formulario_sugiere_presentaciones(cliente_de, dueno, queso):
+    Producto.objects.filter(pk=queso.pk).update(presentacion="bote")
+    html = cliente_de(dueno).get(reverse("usuarios:producto_crear")).content.decode()
+    assert 'list="lista-presentacion"' in html and "<select" not in html.split('name="presentacion"')[0][-200:]
+    for opcion in ("caja", "paquete", "bolsa", "bote"):
+        assert f'<option value="{opcion}">' in html
+
+
+@pytest.mark.parametrize("palabra, plural", [
+    ("caja", "cajas"), ("bote", "botes"), ("barril", "barriles"), ("cruz", "cruces"), ("bolsa grande", "bolsa grande"),
+])
+def test_d46_plural_de_presentacion(palabra, plural):
+    assert Producto.plural(palabra) == plural

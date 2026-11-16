@@ -2,7 +2,9 @@
 from decimal import ROUND_HALF_UP, Decimal
 
 from django import forms
+from django.utils.html import format_html
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.safestring import mark_safe
 
 
 class FormularioBootstrapMixin:
@@ -114,3 +116,18 @@ def siguiente_seguro(request, por_defecto):
     if destino and url_has_allowed_host_and_scheme(destino, {request.get_host()}, request.is_secure()):
         return destino
     return por_defecto
+
+
+class TextoConSugerencias(forms.TextInput):
+    """Campo de texto libre con sugerencias (<datalist>): se puede elegir una o escribir otra (D-45, D-46)."""
+
+    def __init__(self, sugerencias=(), attrs=None):
+        super().__init__(attrs)
+        self.sugerencias = list(sugerencias)
+
+    def render(self, name, value, attrs=None, renderer=None):
+        lista = f"lista-{name}"
+        attrs = {**(attrs or {}), "list": lista, "autocomplete": "off"}
+        html = super().render(name, value, attrs, renderer)
+        opciones = "".join(format_html('<option value="{}">', s) for s in self.sugerencias)
+        return mark_safe(f'{html}<datalist id="{lista}">{opciones}</datalist>')

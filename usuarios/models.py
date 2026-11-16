@@ -215,16 +215,12 @@ class Producto(models.Model):
 
     # D-37: presentación de compra. La existencia se lleva en `unidad_medida` (p. ej. "unidad"), pero el
     # producto llega en cajas o paquetes que traen varias unidades (p. ej. paquete de 6).
-    class Presentacion(models.TextChoices):
-        CAJA = "caja", "Caja"
-        PAQUETE = "paquete", "Paquete"
-        BOLSA = "bolsa", "Bolsa"  # D-39: p. ej. queso mozzarella rallado, bolsa de 5 lb
-
-    PLURAL_PRESENTACION = {"caja": "cajas", "paquete": "paquetes", "bolsa": "bolsas"}
+    # D-46: es texto libre (minúsculas); caja, paquete y bolsa son solo sugerencias.
+    PRESENTACIONES_SUGERIDAS = ["caja", "paquete", "bolsa"]  # D-39: bolsa, p. ej. mozzarella rallado
 
     presentacion = models.CharField(
-        "presentación", max_length=10, choices=Presentacion.choices, blank=True,
-        help_text="Si el producto se compra en cajas, paquetes o bolsas.",
+        "presentación", max_length=30, blank=True,
+        help_text="Si el producto se compra en cajas, paquetes, bolsas, etc. Elija una o escríbala.",
     )
     unidades_por_presentacion = models.PositiveIntegerField(
         "cantidad por presentación", null=True, blank=True,
@@ -249,7 +245,7 @@ class Producto(models.Model):
         if self.controla_merma and self.categoria_id and self.categoria.nombre != CATEGORIA_CON_MERMA:
             raise ValidationError({"controla_merma": "La merma solo aplica a productos de la categoría Proteínas."})
         if self.unidades_por_presentacion and not self.presentacion:
-            raise ValidationError({"presentacion": "Indique la presentación: caja, paquete o bolsa."})
+            raise ValidationError({"presentacion": "Indique la presentación (por ejemplo: caja, paquete o bolsa)."})
         if self.unidades_por_presentacion is not None and self.unidades_por_presentacion < 1:
             raise ValidationError({"unidades_por_presentacion": "Debe ser al menos 1."})
 
@@ -262,18 +258,37 @@ class Producto(models.Model):
         """"unidad" en plural cuando corresponde (6 unidades); las abreviaturas (lb, paq.) no cambian."""
         return "unidades" if self.unidad_medida == "unidad" and cantidad != 1 else self.unidad_medida
 
+    @property
+    def presentacion_display(self):
+        """"Caja", "Saco": la presentación con mayúscula inicial."""
+        return self.presentacion[:1].upper() + self.presentacion[1:]
+
+    @staticmethod
+    def plural(palabra):
+        """Plural en español de una sola palabra (caja -> cajas, bote -> botes, barril -> barriles, cruz -> cruces).
+        Si son varias palabras se deja igual, para no inventar un plural incorrecto."""
+        if not palabra or " " in palabra:
+            return palabra
+        if palabra[-1] in "aeiouáéó":
+            return palabra + "s"
+        if palabra[-1] == "z":
+            return palabra[:-1] + "ces"
+        if palabra[-1] == "s":
+            return palabra
+        return palabra + "es"
+
     def nombre_presentacion(self, cantidad=2):
         if not self.presentacion:
             return ""
-        return self.get_presentacion_display().lower() if cantidad == 1 else self.PLURAL_PRESENTACION[self.presentacion]
+        return self.presentacion if cantidad == 1 else self.plural(self.presentacion)
 
     def descripcion_presentacion(self):
         """"Paquete de 16 unidades", "Bolsa de 5 lb"; solo "Caja" si aún no se sabe cuánto trae; o ""."""
         if not self.presentacion:
             return ""
         if not self.unidades_por_presentacion:
-            return self.get_presentacion_display()  # nombre corto, a pedido de la clienta
-        return f"{self.get_presentacion_display()} de {self.unidades_por_presentacion} {self.unidad_en(self.unidades_por_presentacion)}"
+            return self.presentacion_display  # nombre corto, a pedido de la clienta
+        return f"{self.presentacion_display} de {self.unidades_por_presentacion} {self.unidad_en(self.unidades_por_presentacion)}"
 
     def en_presentaciones(self, cantidad):
         """D-37: 20 unidades con paquete de 6 -> "3 paquetes + 2 unidad". Vacío si no aplica."""

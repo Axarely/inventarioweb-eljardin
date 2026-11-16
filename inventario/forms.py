@@ -11,10 +11,20 @@ from .excepciones import formatear_cantidad
 from .models import Sucursal
 
 
+class CampoProducto(forms.ModelChoiceField):
+    """D-53: cada opción muestra la categoría ("Azúcar · Abarrotes") para distinguir nombres parecidos."""
+
+    def label_from_instance(self, producto):
+        return f"{producto.nombre} · {producto.categoria}" if producto.categoria_id else producto.nombre
+
+
 def _campo_producto():
     # RF-09: solo los productos activos están disponibles en los formularios.
-    return forms.ModelChoiceField(
-        label="Producto", queryset=Producto.objects.filter(activo=True), empty_label="Seleccionar producto…"
+    # D-53: el navegador lo convierte en un buscador (escribir y elegir), ver base.html.
+    return CampoProducto(
+        label="Producto", queryset=Producto.objects.filter(activo=True).select_related("categoria").order_by("nombre"),
+        empty_label="Escriba o elija un producto…",
+        widget=forms.Select(attrs={"class": "buscador-producto"}),
     )
 
 

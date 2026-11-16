@@ -147,3 +147,7 @@ a:hover { color: var(--cobre-texto); }
   .acceso-logo { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .acceso { background-attachment: scroll; } }
+
+/* D-53: buscador de productos (Tom Select) con los colores del sistema */
+.ts-wrapper.buscador-producto .ts-control { min-height: calc(1.5em + .75rem + 2px); }
+.ts-dropdown .active { background-color: #E7F0E3; color: #1F3D2B; }

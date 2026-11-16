@@ -252,3 +252,12 @@ def test_d46_formulario_sugiere_presentaciones(cliente_de, dueno, queso):
 ])
 def test_d46_plural_de_presentacion(palabra, plural):
     assert Producto.plural(palabra) == plural
+
+
+def test_d47_catalogo_de_concentrados():
+    concentrados = {p.nombre: (p.unidad_medida, p.presentacion, p.unidades_por_presentacion, p.controla_merma)
+                    for p in Producto.objects.filter(categoria__nombre="Concentrados")}
+    nombres = ["Salsa jalapeña", "Salsa de piña chipotle", "Concentrado tamarindo", "Concentrado limonada",
+               "Concentrado maracuyá", "Concentrado Jamaica", "Concentrado ajillo"]
+    assert concentrados == {n: ("unidad", "bolsa", None, False) for n in nombres}
+    assert Producto.objects.get(nombre="Concentrado Jamaica").descripcion_presentacion() == "Bolsa"

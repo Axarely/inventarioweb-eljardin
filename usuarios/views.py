@@ -11,7 +11,7 @@ from django.views import View
 from django.views.generic import CreateView, FormView, ListView, UpdateView
 
 from autenticacion.mixins import PermisoRequeridoMixin
-from autenticacion.servicios import reiniciar_intentos
+from autenticacion.servicios import bloquear, desbloquear, reiniciar_intentos
 from config.ui import FormularioMixin, siguiente_seguro
 
 from .forms import (
@@ -117,7 +117,7 @@ class UsuarioPasswordView(PermisoRequeridoMixin, FormularioMixin, FormView):  # 
 
     def form_valid(self, form):
         form.save()
-        reiniciar_intentos(self.usuario)  # D-51: con la contraseña nueva, la cuenta queda desbloqueada
+        reiniciar_intentos(self.usuario)  # D-51: la contraseña nueva quita el bloqueo por intentos (no el manual)
         messages.success(self.request, f"Contraseña de «{self.usuario.nombre}» restablecida.")
         return super().form_valid(form)
 
@@ -139,14 +139,20 @@ class UsuarioActivarView(PermisoRequeridoMixin, View):  # RF-10: desactivar en l
         return redirect("usuarios:usuarios")
 
 
-class UsuarioDesbloquearView(PermisoRequeridoMixin, View):  # D-51 (RNF-02)
-    """Quita el bloqueo temporal por intentos fallidos sin esperar a que venza."""
+class UsuarioDesbloquearView(PermisoRequeridoMixin, View):  # D-51, D-52 (RNF-02)
+    """Bloquea (manual) o desbloquea una cuenta, según su estado actual."""
     permission_required = "usuarios.change_usuario"
 
     def post(self, request, pk):
         usuario = get_object_or_404(Usuario, pk=pk)
-        reiniciar_intentos(usuario)
-        messages.success(request, f"Cuenta de «{usuario.nombre}» desbloqueada. Ya puede iniciar sesión.")
+        if usuario.esta_bloqueado():
+            desbloquear(usuario)
+            messages.success(request, f"Cuenta de «{usuario.nombre}» desbloqueada. Ya puede iniciar sesión.")
+        elif usuario.pk == request.user.pk:
+            messages.error(request, "No puede bloquear su propia cuenta.")
+        else:
+            bloquear(usuario)
+            messages.success(request, f"Cuenta de «{usuario.nombre}» bloqueada. No podrá entrar hasta que la desbloquee.")
         return redirect("usuarios:usuarios")
 
 

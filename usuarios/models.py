@@ -79,6 +79,8 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     # RNF-02 (DEDS 3.5): bloqueo temporal tras intentos fallidos (D-12).
     intentos_fallidos = models.PositiveSmallIntegerField(default=0, editable=False)
     bloqueado_hasta = models.DateTimeField(null=True, blank=True, editable=False)
+    # D-52: bloqueo manual del dueño/administrador; dura hasta que lo desbloqueen.
+    bloqueado_manual = models.BooleanField("bloqueado por el administrador", default=False, editable=False)
 
     objects = UsuarioManager()
 
@@ -113,11 +115,14 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         return self.has_perm(permiso)
 
     def esta_bloqueado(self, ahora=None):
+        return self.bloqueado_manual or self.bloqueo_temporal_activo(ahora)
+
+    def bloqueo_temporal_activo(self, ahora=None):
         return self.bloqueado_hasta is not None and self.bloqueado_hasta > (ahora or timezone.now())
 
     def minutos_de_bloqueo(self, ahora=None):
-        """Minutos (redondeados hacia arriba) que faltan para que termine el bloqueo; 0 si no está bloqueado."""
-        if not self.esta_bloqueado(ahora):
+        """Minutos (redondeados hacia arriba) que faltan para que termine el bloqueo temporal; 0 si no hay."""
+        if not self.bloqueo_temporal_activo(ahora):
             return 0
         segundos = (self.bloqueado_hasta - (ahora or timezone.now())).total_seconds()
         return max(1, -(-int(segundos) // 60))

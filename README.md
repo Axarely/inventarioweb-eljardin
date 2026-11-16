@@ -60,7 +60,7 @@ Contraseña: con `DEBUG=True` es `JardinDemo-2026`. En producción el comando ex
 Incluye 12 consumos de las sucursales fechados en las últimas dos semanas, para que el panel de indicadores tenga datos, y deja alertas de bajo inventario y un producto agotado (el correo a los dueños se imprime en la consola en desarrollo).
 
 Los roles base y sus permisos se crean solos con `migrate` (`usuarios/roles.py`).
-Tras 5 intentos fallidos de inicio de sesión, la cuenta queda bloqueada 15 minutos (configurable con
+Tras 5 intentos fallidos de inicio de sesión, la cuenta queda bloqueada 5 minutos (configurable con
 `LOGIN_MAX_INTENTOS` y `LOGIN_BLOQUEO_MINUTOS`).
 
 En Linux/macOS es igual, salvo que se activa con `source .venv/bin/activate` y se copia con `cp`.

@@ -15,8 +15,10 @@
 3. A la izquierda verá el **menú** con las opciones de su rol. En el celular, ábralo con el botón ☰.
 4. Para salir, pulse **Cerrar sesión** al final del menú.
 
-- Si se equivoca 5 veces seguidas con la contraseña, la cuenta se bloquea **15 minutos**. El dueño o el
+- Si se equivoca 5 veces seguidas con la contraseña, la cuenta se bloquea **5 minutos**. El dueño o el
   administrador puede quitar el bloqueo antes en **Usuarios → Desbloquear** (o restableciendo la contraseña).
+- En **Usuarios**, cada cuenta muestra si está **Desbloqueada** o **Bloqueada**. El dueño o el administrador puede
+  **Bloquear** una cuenta a mano: no podrá entrar hasta que la desbloqueen.
 - **Cantidades:** se escriben directamente. Para libra y media puede escribir `1.5`, `1,5`, `1 1/2` o
   `1 y media`.
 - Si pasan 30 minutos sin usar el sistema, tendrá que volver a entrar.

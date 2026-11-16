@@ -50,3 +50,34 @@ def test_solo_quien_administra_usuarios_desbloquea(client, cliente_de, bodeguero
     assert respuesta.status_code == 403
     encargado_sc.refresh_from_db()
     assert encargado_sc.esta_bloqueado()
+
+
+def test_bloqueo_automatico_dura_5_minutos():
+    assert settings.LOGIN_BLOQUEO_MINUTOS == 5  # D-52
+
+
+def test_lista_siempre_muestra_estado_y_boton(cliente_de, dueno, bodeguero):
+    html = cliente_de(dueno).get(reverse("usuarios:usuarios")).content.decode()
+    assert "Desbloqueada" in html and ">Bloquear</button>" in html
+    assert reverse("usuarios:usuario_desbloquear", args=[bodeguero.pk]) in html
+    assert reverse("usuarios:usuario_desbloquear", args=[dueno.pk]) not in html  # no se bloquea a sí mismo
+
+
+def test_bloqueo_manual_impide_entrar_hasta_desbloquear(client, cliente_de, dueno, bodeguero):
+    cliente = cliente_de(dueno)
+    cliente.post(reverse("usuarios:usuario_desbloquear", args=[bodeguero.pk]))
+    bodeguero.refresh_from_db()
+    assert bodeguero.bloqueado_manual and bodeguero.esta_bloqueado()
+    assert ">Desbloquear</button>" in cliente.get(reverse("usuarios:usuarios")).content.decode()
+    cliente.logout()
+    html = client.post(URL_LOGIN, {"username": bodeguero.correo, "password": PASSWORD}).content.decode()
+    assert "Cuenta bloqueada por el administrador" in html and "_auth_user_id" not in client.session
+    cliente_de(dueno).post(reverse("usuarios:usuario_desbloquear", args=[bodeguero.pk]))
+    client.logout()
+    assert client.post(URL_LOGIN, {"username": bodeguero.correo, "password": PASSWORD}).status_code == 302
+
+
+def test_no_puede_bloquearse_a_si_mismo(cliente_de, dueno):
+    cliente_de(dueno).post(reverse("usuarios:usuario_desbloquear", args=[dueno.pk]))
+    dueno.refresh_from_db()
+    assert not dueno.bloqueado_manual

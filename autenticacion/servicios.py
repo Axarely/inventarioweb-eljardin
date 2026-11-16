@@ -29,3 +29,17 @@ def reiniciar_intentos(usuario):
         usuario.intentos_fallidos = 0
         usuario.bloqueado_hasta = None
         usuario.save(update_fields=["intentos_fallidos", "bloqueado_hasta"])
+
+
+def bloquear(usuario):
+    """D-52: bloqueo manual; la persona no puede entrar hasta que la desbloqueen."""
+    usuario.bloqueado_manual = True
+    usuario.save(update_fields=["bloqueado_manual"])
+
+
+def desbloquear(usuario):
+    """D-51/D-52: quita el bloqueo manual y el temporal por intentos fallidos."""
+    usuario.intentos_fallidos = 0
+    usuario.bloqueado_hasta = None
+    usuario.bloqueado_manual = False
+    usuario.save(update_fields=["intentos_fallidos", "bloqueado_hasta", "bloqueado_manual"])

@@ -25,7 +25,9 @@
       <td>{{ u.rol|default:"—" }}</td>
       <td>{{ u.sucursal|default:"—" }}</td>
       <td>{% if u.activo %}<span class="pill pill-normal">Activo</span>{% elif u.es_solicitud_pendiente %}<span class="pill pill-bajo">Solicitud</span>{% else %}<span class="pill pill-inactivo">Inactivo</span>{% endif %}
-        {% if u.esta_bloqueado %}<span class="pill pill-agotado ms-1" title="Hasta las {{ u.bloqueado_hasta|date:'H:i' }}">Bloqueada {{ u.minutos_de_bloqueo }} min</span>{% endif %}</td>
+        {% if u.bloqueado_manual %}<span class="pill pill-agotado ms-1">Bloqueada</span>
+        {% elif u.esta_bloqueado %}<span class="pill pill-agotado ms-1" title="Hasta las {{ u.bloqueado_hasta|date:'H:i' }}">Bloqueada {{ u.minutos_de_bloqueo }} min</span>
+        {% elif not u.es_solicitud_pendiente %}<span class="pill pill-normal ms-1">Desbloqueada</span>{% endif %}</td>
       <td class="text-end text-nowrap">
         {% if perms.usuarios.change_usuario and u.es_solicitud_pendiente %}
           <a class="btn btn-sm btn-primario" href="{% url 'usuarios:usuario_editar' u.pk %}?aprobar=1">Aprobar</a>
@@ -36,6 +38,12 @@
           {% if u.esta_bloqueado %}
           <form method="post" action="{% url 'usuarios:usuario_desbloquear' u.pk %}" class="d-inline">{% csrf_token %}
             <button class="btn btn-sm btn-primario" type="submit">Desbloquear</button>
+          </form>
+          {% elif u.pk != user.pk %}
+          <form method="post" action="{% url 'usuarios:usuario_desbloquear' u.pk %}" class="d-inline"
+                data-confirmar="¿Bloquear la cuenta de «{{ u.nombre }}»? No podrá entrar hasta que la desbloquee."
+                data-confirmar-boton="Sí, bloquear" data-confirmar-peligro="1">{% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger" type="submit">Bloquear</button>
           </form>
           {% endif %}
           <a class="btn btn-sm btn-secundario" href="{% url 'usuarios:usuario_editar' u.pk %}">Editar</a>

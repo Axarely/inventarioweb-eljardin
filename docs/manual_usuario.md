@@ -29,7 +29,8 @@ por debajo del stock mínimo) y **Agotado** (rojo).
 **Registrar una entrada de mercadería**
 1. Menú → **Entradas**.
 2. Elija el producto. A la derecha verá cuánto hay ahora en bodega.
-3. Escriba la cantidad recibida y elija el proveedor. Pulse **Registrar entrada**.
+3. Escriba la cantidad recibida. El **proveedor es opcional**: escríbalo (el sistema sugiere los que ya existen y
+   guarda los nuevos) o déjelo en blanco. Pulse **Registrar entrada**.
 4. Un mensaje verde confirma la entrada y muestra la nueva existencia en bodega.
 
 Si el producto no está en la lista, use el enlace **Crear producto**: al guardarlo vuelve al formulario.

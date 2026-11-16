@@ -31,3 +31,17 @@ def obtener_proveedor_activo(proveedor_id):
     if proveedor is None:
         raise ValidationError("Seleccione un proveedor activo.")
     return proveedor
+
+
+def proveedor_por_nombre(nombre):
+    """D-45: en la entrada el proveedor se ESCRIBE y es opcional. Vacío -> None. Si ya existe uno con ese nombre
+    (sin importar mayúsculas ni espacios) se usa; si no, se crea. Uno desactivado no se acepta (RF-11)."""
+    nombre = " ".join((nombre or "").split())
+    if not nombre:
+        return None
+    proveedor = Proveedor.objects.filter(nombre__iexact=nombre).first()
+    if proveedor is None:
+        return crear_proveedor({"nombre": nombre})
+    if not proveedor.activo:
+        raise ValidationError(f"El proveedor «{proveedor}» está desactivado. Actívelo en Proveedores o escriba otro.")
+    return proveedor

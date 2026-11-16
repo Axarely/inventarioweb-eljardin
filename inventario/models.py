@@ -304,7 +304,10 @@ class EntradaInventario(MovimientoInventario):
 
     TIPO = MovimientoInventario.Tipo.ENTRADA
 
-    proveedor = models.ForeignKey("proveedores.Proveedor", on_delete=models.PROTECT, related_name="entradas")
+    # D-45: el proveedor es opcional (pedido de la clienta); si se indica, debe estar activo (RF-11).
+    proveedor = models.ForeignKey(
+        "proveedores.Proveedor", on_delete=models.PROTECT, related_name="entradas", null=True, blank=True
+    )
 
     class Meta:
         verbose_name = "entrada de inventario"
@@ -316,7 +319,7 @@ class EntradaInventario(MovimientoInventario):
             raise MovimientoInvalido("Las entradas solo pueden registrarse en la bodega.")
         if self.origen_id is not None:
             raise MovimientoInvalido("Una entrada no tiene ubicación de origen.")
-        if not self.proveedor.activo:
+        if self.proveedor_id is not None and not self.proveedor.activo:
             raise MovimientoInvalido(f"El proveedor «{self.proveedor}» está desactivado.")
         with transaction.atomic():
             self.save()

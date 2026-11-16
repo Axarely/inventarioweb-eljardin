@@ -29,7 +29,7 @@ def registrar_entrada(producto_id, cantidad, proveedor_id, usuario_id):  # RF-02
     entrada = MovimientoInventarioFactory.crear(ENTRADA, {
         "producto": producto,
         "cantidad": cantidad,
-        "proveedor": obtener_proveedor_activo(proveedor_id),
+        "proveedor": obtener_proveedor_activo(proveedor_id) if proveedor_id is not None else None,  # D-45
         "destino": Bodega.central(),
         "usuario_id": usuario_id,
     })

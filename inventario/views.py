@@ -9,13 +9,14 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import DatabaseError
+from django.db import DatabaseError, transaction
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from django.views.generic import FormView, ListView
 
 from autenticacion.mixins import PermisoRequeridoMixin
+from proveedores.servicios import proveedor_por_nombre
 from usuarios.models import Categoria, Producto
 
 from . import servicios
@@ -56,9 +57,12 @@ class EntradaView(PermisoRequeridoMixin, FormView):  # RF-02, RF-11, UC02
     def form_valid(self, form):
         datos = form.cleaned_data
         try:
-            entrada = servicios.registrar_entrada(
-                datos["producto"].pk, datos["cantidad"], datos["proveedor"].pk, self.request.user.pk
-            )
+            with transaction.atomic():  # D-45: el proveedor escrito se crea junto con la entrada
+                proveedor = proveedor_por_nombre(datos["proveedor"])
+                entrada = servicios.registrar_entrada(
+                    datos["producto"].pk, datos["cantidad"], proveedor.pk if proveedor else None,
+                    self.request.user.pk,
+                )
         except ValidationError as error:  # UC02 E1/E2: se informa sin cambios parciales
             form.add_error(None, error)
             return self.form_invalid(form)

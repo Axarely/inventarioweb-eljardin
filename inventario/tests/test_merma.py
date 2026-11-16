@@ -196,5 +196,5 @@ def test_d33_entrada_avisa_control_de_merma(cliente_de, bodeguero, proteina_merm
     datos = cliente.get(reverse("inventario:existencia_bodega"), {"producto": proteina_merma.pk}).json()
     assert datos["controla_merma"] is True
     respuesta = cliente.post(reverse("inventario:entrada"),
-                             {"producto": proteina_merma.pk, "cantidad": "10", "proveedor": proveedor.pk}, follow=True)
+                             {"producto": proteina_merma.pk, "cantidad": "10", "proveedor": proveedor.nombre}, follow=True)
     assert "Pendientes de peso real" in respuesta.content.decode()

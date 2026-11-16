@@ -33,7 +33,7 @@ def test_int_entrada_salida_existencia_alerta_correo(
     """Flujo completo: entrada -> existencia -> salida que agota la bodega -> alerta -> correo -> panel."""
     client.force_login(bodeguero)
     with django_capture_on_commit_callbacks(execute=True):
-        client.post(reverse("inventario:entrada"), {"producto": producto.pk, "cantidad": "15", "proveedor": proveedor.pk})
+        client.post(reverse("inventario:entrada"), {"producto": producto.pk, "cantidad": "15", "proveedor": proveedor.nombre})
     assert existencia(producto, bodega) == Decimal("15")
     assert not AlertaInventario.objects.exists() and mailoutbox == []
 
@@ -104,7 +104,7 @@ def test_int05_entrada_solo_con_proveedor_activo_via_iproveedores(
     client.force_login(dueno)
     client.post(reverse("proveedores:activar", args=[proveedor.pk]))
     client.force_login(bodeguero)
-    respuesta = client.post(reverse("inventario:entrada"), {"producto": producto.pk, "cantidad": "5", "proveedor": proveedor.pk})
+    respuesta = client.post(reverse("inventario:entrada"), {"producto": producto.pk, "cantidad": "5", "proveedor": proveedor.nombre})
     assert respuesta.context["form"].errors["proveedor"]
     assert not MovimientoInventario.objects.exists()
 

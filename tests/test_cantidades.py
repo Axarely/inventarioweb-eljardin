@@ -38,7 +38,7 @@ def test_d35_campo_es_de_texto_sin_flechas():
 def test_d35_entrada_de_libra_y_media(cliente_de, bodeguero, bodega, proteina_merma, proveedor, escrito):
     respuesta = cliente_de(bodeguero).post(
         reverse("inventario:entrada"),
-        {"producto": proteina_merma.pk, "cantidad": escrito, "proveedor": proveedor.pk}, follow=True,
+        {"producto": proteina_merma.pk, "cantidad": escrito, "proveedor": proveedor.nombre}, follow=True,
     )
     assert "Entrada registrada: +1.5 lb de Alitas de pollo" in respuesta.content.decode()
     assert Existencia.objects.get(producto=proteina_merma, ubicacion=bodega).cantidad == Decimal("1.5")

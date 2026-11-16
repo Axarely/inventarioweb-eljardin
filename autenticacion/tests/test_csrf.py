@@ -45,7 +45,7 @@ def test_rnf02_token_invalido_en_otro_formulario_muestra_pagina_amable(bodeguero
     cliente.force_login(bodeguero)
     cliente.logout()  # sin sesión: el aviso debe ser la página propia, no la técnica de Django
     respuesta = cliente.post(reverse("inventario:entrada"), {"producto": producto.pk, "cantidad": "5",
-                                                             "proveedor": proveedor.pk}, HTTP_REFERER="http://evil.example/")
+                                                             "proveedor": proveedor.nombre}, HTTP_REFERER="http://evil.example/")
     html = respuesta.content.decode()
     assert respuesta.status_code == 403 and "La página había vencido" in html
     assert "evil.example" not in html and "Reason given for failure" not in html

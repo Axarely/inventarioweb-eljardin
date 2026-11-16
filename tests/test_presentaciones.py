@@ -57,7 +57,7 @@ def test_d37_textos_de_presentacion(queso, leche):
 
 def test_d37_entrada_por_paquetes(cliente_de, bodeguero, bodega, queso, proveedor):
     respuesta = cliente_de(bodeguero).post(reverse("inventario:entrada"), {
-        "producto": queso.pk, "cantidad": "3", "medida": "presentacion", "proveedor": proveedor.pk,
+        "producto": queso.pk, "cantidad": "3", "medida": "presentacion", "proveedor": proveedor.nombre,
     }, follow=True)
     assert existencia(queso, bodega) == Decimal("18")
     assert "Entrada registrada: +18 unidad (3 paquetes de 6) de Queso de prueba" in respuesta.content.decode()
@@ -65,20 +65,20 @@ def test_d37_entrada_por_paquetes(cliente_de, bodeguero, bodega, queso, proveedo
 
 def test_d37_entrada_en_unidades_por_defecto(cliente_de, bodeguero, bodega, queso, proveedor):
     cliente_de(bodeguero).post(reverse("inventario:entrada"),
-                               {"producto": queso.pk, "cantidad": "4", "proveedor": proveedor.pk})
+                               {"producto": queso.pk, "cantidad": "4", "proveedor": proveedor.nombre})
     assert existencia(queso, bodega) == Decimal("4")
 
 
 def test_d37_medio_paquete(cliente_de, bodeguero, bodega, queso, proveedor):
     cliente_de(bodeguero).post(reverse("inventario:entrada"), {
-        "producto": queso.pk, "cantidad": "1 y media", "medida": "presentacion", "proveedor": proveedor.pk,
+        "producto": queso.pk, "cantidad": "1 y media", "medida": "presentacion", "proveedor": proveedor.nombre,
     })
     assert existencia(queso, bodega) == Decimal("9")
 
 
 def test_d37_sin_unidades_definidas_no_se_registra_por_caja(cliente_de, bodeguero, bodega, leche, proveedor):
     respuesta = cliente_de(bodeguero).post(reverse("inventario:entrada"), {
-        "producto": leche.pk, "cantidad": "2", "medida": "presentacion", "proveedor": proveedor.pk,
+        "producto": leche.pk, "cantidad": "2", "medida": "presentacion", "proveedor": proveedor.nombre,
     })
     assert "no tiene configurado cuánto trae cada caja, paquete o bolsa" in str(respuesta.context["form"].errors["medida"])
     assert existencia(leche, bodega) == Decimal("0")
@@ -123,7 +123,7 @@ def test_d37_dueno_define_unidades_por_caja(cliente_de, dueno, bodeguero, bodega
     leche.refresh_from_db()
     assert leche.usa_presentacion and leche.unidades_por_presentacion == 12
     cliente_de(bodeguero).post(reverse("inventario:entrada"), {
-        "producto": leche.pk, "cantidad": "2", "medida": "presentacion", "proveedor": proveedor.pk,
+        "producto": leche.pk, "cantidad": "2", "medida": "presentacion", "proveedor": proveedor.nombre,
     })
     assert existencia(leche, bodega) == Decimal("24")
 
@@ -146,7 +146,7 @@ def test_d38_queso_sula_paquete_de_16(cliente_de, bodeguero, bodega, proveedor):
     sula = Producto.objects.get(nombre="Queso Sula")
     assert sula.descripcion_presentacion() == "Paquete de 16 unidades"
     cliente_de(bodeguero).post(reverse("inventario:entrada"), {
-        "producto": sula.pk, "cantidad": "2", "medida": "presentacion", "proveedor": proveedor.pk,
+        "producto": sula.pk, "cantidad": "2", "medida": "presentacion", "proveedor": proveedor.nombre,
     })
     assert existencia(sula, bodega) == Decimal("32")
 
@@ -189,7 +189,7 @@ def test_d43_mozzarella_se_cuenta_por_bolsa(cliente_de, bodeguero, bodega, prove
     mozzarella = Producto.objects.get(nombre="Queso mozzarella")
     assert mozzarella.unidad_medida == "bolsa de 5 lb" and not mozzarella.usa_presentacion
     cliente_de(bodeguero).post(reverse("inventario:entrada"), {
-        "producto": mozzarella.pk, "cantidad": "5", "proveedor": proveedor.pk,
+        "producto": mozzarella.pk, "cantidad": "5", "proveedor": proveedor.nombre,
     })
     assert existencia(mozzarella, bodega) == Decimal("5")  # 5 bolsas, no 25 lb
 
@@ -210,15 +210,15 @@ def test_d40_congelados_sin_cantidad_definida_se_registran_por_unidad(cliente_de
     papas = Producto.objects.get(nombre="Papas")
     cliente = cliente_de(bodeguero)
     por_caja = cliente.post(reverse("inventario:entrada"), {
-        "producto": papas.pk, "cantidad": "2", "medida": "presentacion", "proveedor": proveedor.pk,
+        "producto": papas.pk, "cantidad": "2", "medida": "presentacion", "proveedor": proveedor.nombre,
     })
     assert "medida" in por_caja.context["form"].errors
-    cliente.post(reverse("inventario:entrada"), {"producto": papas.pk, "cantidad": "30", "proveedor": proveedor.pk})
+    cliente.post(reverse("inventario:entrada"), {"producto": papas.pk, "cantidad": "30", "proveedor": proveedor.nombre})
     assert existencia(papas, bodega) == Decimal("30")
 
 
 def test_d41_nuggets_se_cuentan_por_paquete(cliente_de, bodeguero, bodega, proveedor):
     nuggets = Producto.objects.get(nombre="Nuggets de pollo")
     assert nuggets.unidad_medida == "paquete" and nuggets.descripcion_presentacion() == ""
-    cliente_de(bodeguero).post(reverse("inventario:entrada"), {"producto": nuggets.pk, "cantidad": "5", "proveedor": proveedor.pk})
+    cliente_de(bodeguero).post(reverse("inventario:entrada"), {"producto": nuggets.pk, "cantidad": "5", "proveedor": proveedor.nombre})
     assert existencia(nuggets, bodega) == Decimal("5")

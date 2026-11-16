@@ -22,7 +22,7 @@ URL_API = reverse("inventario:existencia_bodega")
 def test_rf02_formulario_entrada_registra_movimiento(cliente_de, bodeguero, bodega, producto, proveedor):
     """CP-RF02-03."""
     respuesta = cliente_de(bodeguero).post(
-        URL_ENTRADA, {"producto": producto.pk, "cantidad": "12.5", "proveedor": proveedor.pk}, follow=True
+        URL_ENTRADA, {"producto": producto.pk, "cantidad": "12.5", "proveedor": proveedor.nombre}, follow=True
     )
     assert respuesta.status_code == 200
     entrada = EntradaInventario.objects.get()
@@ -35,7 +35,7 @@ def test_rf02_formulario_entrada_registra_movimiento(cliente_de, bodeguero, bode
 def test_rf02_formulario_rechaza_cantidad_invalida(cliente_de, bodeguero, bodega, producto, proveedor, cantidad):
     """CP-RF02-04 a través de la vista."""
     respuesta = cliente_de(bodeguero).post(
-        URL_ENTRADA, {"producto": producto.pk, "cantidad": cantidad, "proveedor": proveedor.pk}
+        URL_ENTRADA, {"producto": producto.pk, "cantidad": cantidad, "proveedor": proveedor.nombre}
     )
     assert respuesta.status_code == 200
     assert respuesta.context["form"].errors["cantidad"]
@@ -48,12 +48,12 @@ def test_rf02_formulario_no_ofrece_inactivos(cliente_de, bodeguero, bodega, prod
     producto.save()
     form = cliente_de(bodeguero).get(URL_ENTRADA).context["form"]
     assert producto not in form.fields["producto"].queryset
-    assert proveedor_inactivo not in form.fields["proveedor"].queryset
+    assert proveedor_inactivo not in form.proveedores_sugeridos
 
 
 def test_rf02_sin_bodega_muestra_error(cliente_de, bodeguero, producto, proveedor):
     respuesta = cliente_de(bodeguero).post(
-        URL_ENTRADA, {"producto": producto.pk, "cantidad": "5", "proveedor": proveedor.pk}
+        URL_ENTRADA, {"producto": producto.pk, "cantidad": "5", "proveedor": proveedor.nombre}
     )
     assert "No hay una bodega central registrada." in respuesta.content.decode()
 
@@ -63,7 +63,7 @@ def test_rf02_solo_bodeguero_registra_entrada(request, cliente_de, rol, bodega, 
     """CP-RF02-07."""
     usuario = request.getfixturevalue(rol)
     respuesta = cliente_de(usuario).post(
-        URL_ENTRADA, {"producto": producto.pk, "cantidad": "5", "proveedor": proveedor.pk}
+        URL_ENTRADA, {"producto": producto.pk, "cantidad": "5", "proveedor": proveedor.nombre}
     )
     assert respuesta.status_code == 403
     assert not MovimientoInventario.objects.exists()

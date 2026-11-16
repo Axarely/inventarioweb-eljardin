@@ -21,6 +21,7 @@
         </div>
       </div>
       {% with campo=form.proveedor %}{% include "_campo.html" %}{% endwith %}
+      <datalist id="lista-proveedores">{% for p in form.proveedores_sugeridos %}<option value="{{ p.nombre }}">{% endfor %}</datalist>
       <div class="d-flex gap-2 mt-2">
         <button type="submit" class="btn btn-primario">Registrar entrada</button>
         <a href="{% url 'inicio' %}" class="btn btn-secundario">Cancelar</a>
@@ -44,7 +45,7 @@
       <tr>
         <td class="text-nowrap">{{ c.entrada.fecha|date:"d/m/Y H:i" }}</td>
         <td>{{ c.entrada.producto.nombre }}</td>
-        <td>{{ c.entrada.proveedor }}</td>
+        <td>{{ c.entrada.proveedor|default:"—" }}</td>
         <td class="text-end">{{ c.entrada.cantidad|cantidad }} {{ c.entrada.producto.unidad_medida }}</td>
         <td>
           <form method="post" action="{% url 'inventario:peso_real' %}" class="d-flex gap-2 align-items-center">{% csrf_token %}

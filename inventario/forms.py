@@ -3,6 +3,7 @@ from decimal import Decimal
 from django import forms
 
 from config.ui import CampoCantidad, FormularioBootstrapMixin
+from proveedores.models import Proveedor
 from proveedores.servicios import proveedores_activos
 from usuarios.models import Producto
 
@@ -64,12 +65,27 @@ def _campo_cantidad(etiqueta):
 class EntradaForm(PresentacionMixin, FormularioBootstrapMixin, forms.Form):  # RF-02, RF-11 (Fig. 15)
     producto = _campo_producto()
     cantidad = _campo_cantidad("Cantidad recibida")
-    proveedor = forms.ModelChoiceField(label="Proveedor", queryset=None, empty_label="Seleccionar proveedor…")
+    # D-45: opcional y escrito; sugiere los proveedores activos (datalist) y crea el que no exista.
+    proveedor = forms.CharField(
+        label="Proveedor (opcional)", required=False, max_length=120,
+        widget=forms.TextInput(attrs={"list": "lista-proveedores", "autocomplete": "off",
+                                      "placeholder": "Escriba el proveedor o déjelo en blanco"}),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["proveedor"].queryset = proveedores_activos()
+        self.proveedores_sugeridos = proveedores_activos()
         self._agregar_medida()
+
+    def clean_proveedor(self):
+        nombre = " ".join(self.cleaned_data["proveedor"].split())
+        if nombre:
+            existente = Proveedor.objects.filter(nombre__iexact=nombre).first()
+            if existente is not None and not existente.activo:
+                raise forms.ValidationError(
+                    f"El proveedor «{existente}» está desactivado. Actívelo en Proveedores o escriba otro."
+                )
+        return nombre
 
 
 class PesoRealForm(FormularioBootstrapMixin, forms.Form):  # D-33: segunda entrada de proteínas

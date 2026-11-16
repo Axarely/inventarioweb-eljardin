@@ -36,7 +36,7 @@
       <td class="text-end">{{ m.cantidad|cantidad }} {{ m.producto.unidad_medida }}</td>
       <td>{{ m.origen|default:"—" }}</td>
       <td>{{ m.destino|default:"—" }}</td>
-      <td>{% if m.tipo == "entrada" %}{{ m.entradainventario.proveedor }}{% else %}—{% endif %}</td>
+      <td>{% if m.tipo == "entrada" %}{{ m.entradainventario.proveedor|default:"—" }}{% else %}—{% endif %}</td>
       <td>{{ m.usuario.nombre }}</td>
       <td>
         {% if m.anulado %}

@@ -271,7 +271,8 @@ def reporte_merma(filtros):  # D-33: control interno de proteínas, por producto
         filtros=filtros.describir(con_sucursal=False),
         columnas=["Producto", "Proveedor", "Unidad", "Recepciones", "Entregado", "Peso real", "Merma", "Rendimiento %"],
         filas=[
-            [f["entrada__producto__nombre"], f["entrada__proveedor__nombre"], f["entrada__producto__unidad_medida"],
+            [f["entrada__producto__nombre"], f["entrada__proveedor__nombre"] or "Sin proveedor",  # D-45
+             f["entrada__producto__unidad_medida"],
              f["recepciones"], f["bruto"], f["real"], f["merma"],
              (f["real"] / f["bruto"] * 100).quantize(Decimal("0.1")) if f["bruto"] else None]
             for f in filas

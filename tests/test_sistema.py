@@ -45,7 +45,7 @@ def test_sis01_bodeguero(client, bodeguero, bodega, santa_cruz, producto, provee
     """Login -> registrar entrada -> registrar salida a Santa Cruz -> historial -> corregir -> cerrar sesión."""
     login(client, bodeguero.correo)
     assert client.get(reverse("inicio")).status_code == 200
-    client.post(reverse("inventario:entrada"), {"producto": producto.pk, "cantidad": "40", "proveedor": proveedor.pk})
+    client.post(reverse("inventario:entrada"), {"producto": producto.pk, "cantidad": "40", "proveedor": proveedor.nombre})
     client.post(reverse("inventario:salida"), {"sucursal": santa_cruz.pk, "producto": producto.pk, "cantidad": "15"})
     assert cantidad(producto, bodega) == Decimal("25") and cantidad(producto, santa_cruz) == Decimal("15")
     historial = list(client.get(reverse("inventario:historial")).context["movimientos"])
@@ -229,7 +229,7 @@ def test_rnf03_tareas_frecuentes_en_tres_pasos(request, client, rol, opcion, rut
         assert pagina.context["existencias"] is not None  # la consulta ya se ve
         return
     formulario = {"producto": producto.pk, "cantidad": "5"}
-    formulario.update({"proveedor": proveedor.pk} if datos == "entrada" else {"sucursal": santa_cruz.pk})
+    formulario.update({"proveedor": proveedor.nombre} if datos == "entrada" else {"sucursal": santa_cruz.pk})
     respuesta = client.post(menu[opcion], formulario, follow=True)  # paso 2: un solo formulario
     mensajes = [str(m) for m in respuesta.context["messages"]]
     assert any(m.startswith(("Entrada registrada", "Salida registrada")) for m in mensajes)  # paso 3
@@ -265,6 +265,6 @@ def test_rnf08_falla_de_bd_en_entrada(client, bodeguero, bodega, producto, prove
     client.force_login(bodeguero)
     with mock.patch.object(Existencia, "actualizar_cantidad", side_effect=DatabaseError("conexión perdida")):
         respuesta = client.post(reverse("inventario:entrada"),
-                                {"producto": producto.pk, "cantidad": "5", "proveedor": proveedor.pk})
+                                {"producto": producto.pk, "cantidad": "5", "proveedor": proveedor.nombre})
     assert respuesta.status_code == 200 and "No se aplicó ningún cambio" in respuesta.content.decode()
     assert not MovimientoInventario.objects.exists()

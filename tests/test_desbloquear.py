@@ -52,8 +52,8 @@ def test_solo_quien_administra_usuarios_desbloquea(client, cliente_de, bodeguero
     assert encargado_sc.esta_bloqueado()
 
 
-def test_bloqueo_automatico_dura_5_minutos():
-    assert settings.LOGIN_BLOQUEO_MINUTOS == 5  # D-52
+def test_bloqueo_automatico_dura_15_minutos():
+    assert settings.LOGIN_BLOQUEO_MINUTOS == 15  # DEDS 3.5
 
 
 def test_lista_siempre_muestra_estado_y_boton(cliente_de, dueno, bodeguero):

@@ -99,7 +99,7 @@ LOGOUT_REDIRECT_URL = "autenticacion:login"
 
 # RNF-02 (DEDS 3.5): bloqueo temporal tras intentos fallidos consecutivos
 LOGIN_MAX_INTENTOS = env.int("LOGIN_MAX_INTENTOS", default=5)
-LOGIN_BLOQUEO_MINUTOS = env.int("LOGIN_BLOQUEO_MINUTOS", default=5)  # D-52: la clienta pidió 5 (DEDS: 15)
+LOGIN_BLOQUEO_MINUTOS = env.int("LOGIN_BLOQUEO_MINUTOS", default=15)  # DEDS 3.5
 
 from django.contrib.messages import constants as mensajes  # noqa: E402
 

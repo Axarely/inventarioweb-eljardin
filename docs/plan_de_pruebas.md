@@ -224,7 +224,7 @@ prueba verificables. Columnas: **ID** · **Nivel** (U = unitaria, I = integraci�
 | CP-RF01-04 | S | Dado un usuario con `activo = False`, cuando envía credenciales correctas, entonces el acceso es rechazado. | − | `test_rf01_usuario_inactivo_no_inicia_sesion` ✔ (humo) |
 | CP-RF01-05 | S | Dado un bodeguero autenticado, cuando solicita una URL del dueño (`/usuarios/`, `/alertas/`), entonces recibe 403. Se repite para cada par rol × URL no permitida (matriz RBAC). | − | `test_rf01_matriz_rbac` (parametrizado) |
 | CP-RF01-06 | S | Dado un visitante sin sesión, cuando solicita cualquier URL protegida, entonces es redirigido al login. | − | `test_rf01_inicio_sin_sesion_redirige_a_login` ✔ (humo) |
-| CP-RF01-07 | S | Dado un usuario, cuando falla 5 veces seguidas, entonces el 6.º intento, incluso con la contraseña correcta, se rechaza durante 5 minutos (DEDS 3.5 decía 15; D-52). | − L | `test_rf01_bloqueo_tras_intentos_fallidos` |
+| CP-RF01-07 | S | Dado un usuario, cuando falla 5 veces seguidas, entonces el 6.º intento, incluso con la contraseña correcta, se rechaza durante 15 minutos (DEDS 3.5). | − L | `test_rf01_bloqueo_tras_intentos_fallidos` |
 | CP-RF01-08 | S | Dado un usuario autenticado, cuando pasan más de `SESSION_COOKIE_AGE` segundos sin actividad, entonces la siguiente petición lo envía al login. | − | `test_rnf02_sesion_expira_por_inactividad` |
 
 ### RF-02 — Registrar entrada a bodega

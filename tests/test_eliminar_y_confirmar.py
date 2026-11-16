@@ -46,3 +46,18 @@ def test_cerrar_sesion_pide_confirmacion(cliente_de, bodeguero):
     html = cliente_de(bodeguero).get(reverse("inicio"), follow=True).content.decode()
     assert "¿Está seguro de que quiere cerrar sesión?" in html and 'id="modal-confirmar"' in html
     assert "Sí, cerrar sesión" in html
+
+
+def test_abrir_logout_con_sesion_muestra_confirmacion(cliente_de, bodeguero):
+    """DEF-16: abrir /logout/ (recargar, «Atrás») ya no da error 405."""
+    cliente = cliente_de(bodeguero)
+    respuesta = cliente.get(reverse("autenticacion:logout"))
+    assert respuesta.status_code == 200 and "¿Cerrar sesión?" in respuesta.content.decode()
+    assert "_auth_user_id" in cliente.session  # abrirla NO cierra la sesión (solo el POST)
+    assert cliente.post(reverse("autenticacion:logout")).status_code == 302
+    assert "_auth_user_id" not in cliente.session
+
+
+def test_abrir_logout_sin_sesion_va_al_login(client):
+    respuesta = client.get(reverse("autenticacion:logout"))
+    assert respuesta.status_code == 302 and respuesta["Location"] == reverse("autenticacion:login")

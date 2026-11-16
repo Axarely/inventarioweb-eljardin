@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Cerrar sesión — InventarioWeb El Jardín{% endblock %}
+{% block contenido %}
+{# DEF-16: confirmación cuando se abre /logout/ directamente (recargar, «Atrás», historial) #}
+<div class="card mx-auto" style="max-width: 32rem">
+  <div class="card-body">
+    <h1 class="h5 titulo-primario">¿Cerrar sesión?</h1>
+    <p class="mb-3">¿Está seguro de que quiere cerrar sesión? Si estaba registrando algo y no lo guardó, se perderá.</p>
+    <form method="post" action="{% url 'autenticacion:logout' %}" class="d-flex gap-2">{% csrf_token %}
+      <button type="submit" class="btn btn-primario">Sí, cerrar sesión</button>
+      <a href="{% url 'inicio' %}" class="btn btn-secundario">Cancelar</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

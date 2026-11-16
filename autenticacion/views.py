@@ -4,7 +4,7 @@ Módulo de Autenticación (DEDS 3.2) — RF-01, RF-18, RNF-02.
 from django.contrib import messages
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, TemplateView
 
@@ -20,7 +20,15 @@ class IniciarSesionView(auth_views.LoginView):  # RF-01
 
 
 class CerrarSesionView(auth_views.LogoutView):  # RF-18: solo por POST, invalida la sesión
-    pass
+    """La sesión solo se cierra por POST (protección CSRF). DEF-16: si el navegador ABRE /logout/ (recargar,
+    «Atrás», historial), en vez del error 405 se muestra la confirmación o, sin sesión, el inicio de sesión."""
+
+    http_method_names = ["get", "post", "options"]
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect("autenticacion:login")
+        return render(request, "autenticacion/cerrar_sesion.html")
 
 
 class RegistroView(CreateView):  # D-31: solicitud de cuenta, pendiente de aprobación de un dueño

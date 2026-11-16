@@ -315,6 +315,31 @@ class CategoriaEliminarView(PermisoRequeridoMixin, View):  # D-32: solo agregada
         return redirect("usuarios:categorias")
 
 
+class ProductoEliminarView(PermisoRequeridoMixin, View):  # D-49
+    """Elimina un producto solo si nunca tuvo movimientos: si los tiene, borrarlo rompería el historial y
+    los reportes (RF-06, RF-15), así que se pide desactivarlo."""
+    permission_required = "usuarios.delete_producto"
+
+    def post(self, request, pk):
+        producto = get_object_or_404(Producto, pk=pk)
+        if producto.movimientos.exists():
+            messages.error(
+                request,
+                f"«{producto.nombre}» tiene movimientos registrados y no se puede eliminar sin perder el historial. "
+                "Desactívelo para que deje de aparecer en las entradas y salidas.",
+            )
+            return redirect("usuarios:productos")
+        try:
+            with transaction.atomic():
+                producto.existencias.all().delete()  # sin movimientos solo puede haber registros en 0
+                producto.delete()
+        except ProtectedError:
+            messages.error(request, f"«{producto.nombre}» tiene datos asociados y no se puede eliminar. Desactívelo.")
+            return redirect("usuarios:productos")
+        messages.success(request, f"Producto «{producto.nombre}» eliminado.")
+        return redirect("usuarios:productos")
+
+
 class ProductoActivarView(PermisoRequeridoMixin, View):  # RF-09: activar/desactivar
     permission_required = "usuarios.change_producto"
 

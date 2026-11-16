@@ -91,6 +91,8 @@ Los movimientos nunca se borran: quedan en el historial marcados como "Anulado".
 - **Presentación (cajas, paquetes, bolsas…):** al editar un producto **elija o escriba** cómo llega (caja, paquete,
   bolsa, o cualquier otra, como «saco» o «bote») y **cuánto trae**. Si falta ese número (la lista muestra solo «Caja» o «Paquete»), el producto solo se
   puede registrar en unidades.
+- **Eliminar:** el botón **Eliminar** pide confirmación y borra el producto **solo si nunca tuvo movimientos**.
+  Si ya tiene entradas o salidas, use **Desactivar** (así se conserva el historial).
 - **Controla merma:** la casilla solo aparece (y solo se puede activar) en productos de **Proteínas**.
 - **Categorías** (botón en Catálogo): hay 9 fijas (Proteínas, Lácteos, Congelados, Concentrados, Abarrotes,
   Latas y aderezos, Verduras, Desechables y limpieza, Varios). Si necesita otra, escríbala en

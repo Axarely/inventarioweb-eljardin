@@ -42,6 +42,13 @@
             <button class="btn btn-sm btn-secundario" type="submit">{% if p.activo %}Desactivar{% else %}Activar{% endif %}</button>
           </form>
         {% endif %}
+        {% if perms.usuarios.delete_producto %}
+          <form method="post" action="{% url 'usuarios:producto_eliminar' p.pk %}" class="d-inline"
+                data-confirmar="¿Seguro que quiere eliminar el producto «{{ p.nombre }}»? Esta acción no se puede deshacer."
+                data-confirmar-boton="Sí, eliminar" data-confirmar-peligro="1">{% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
+          </form>
+        {% endif %}
       </td>
     </tr>
   {% empty %}

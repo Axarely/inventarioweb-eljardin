@@ -19,6 +19,7 @@ urlpatterns = [
     path("catalogo/nuevo/", views.ProductoCrearView.as_view(), name="producto_crear"),
     path("catalogo/<int:pk>/editar/", views.ProductoEditarView.as_view(), name="producto_editar"),
     path("catalogo/<int:pk>/activar/", views.ProductoActivarView.as_view(), name="producto_activar"),
+    path("catalogo/<int:pk>/eliminar/", views.ProductoEliminarView.as_view(), name="producto_eliminar"),
     path("catalogo/categorias/", views.CategoriaListView.as_view(), name="categorias"),
     path("catalogo/categorias/nueva/", views.CategoriaCrearView.as_view(), name="categoria_crear"),
     path("catalogo/categorias/<int:pk>/eliminar/", views.CategoriaEliminarView.as_view(), name="categoria_eliminar"),

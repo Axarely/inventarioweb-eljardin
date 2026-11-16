@@ -12,6 +12,7 @@ PERMISOS_POR_ROL = {
         "usuarios.view_usuario", "usuarios.add_usuario", "usuarios.change_usuario",
         "usuarios.view_rol", "usuarios.add_rol", "usuarios.change_rol", "usuarios.delete_rol",
         "usuarios.view_producto", "usuarios.add_producto", "usuarios.change_producto",
+        "usuarios.delete_producto",  # D-49: eliminar productos sin movimientos
         "usuarios.view_categoria", "usuarios.add_categoria", "usuarios.delete_categoria",
         "proveedores.view_proveedor", "proveedores.add_proveedor", "proveedores.change_proveedor",
         "inventario.consultar_existencias_todas", "inventario.ver_historial",

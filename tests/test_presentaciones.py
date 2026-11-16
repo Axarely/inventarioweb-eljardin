@@ -279,3 +279,12 @@ def test_d48_catalogo_de_abarrotes():
     assert {n: abarrotes[n] for n in esperado} == esperado
     assert Producto.objects.get(nombre="Harina").descripcion_presentacion() == "Fardo"
     assert Producto.objects.get(nombre="Pan clásico").nombre_presentacion() == "cajas"
+
+
+def test_d50_catalogo_de_latas_y_aderezos():
+    productos = {p.nombre: (p.unidad_medida, p.presentacion)
+                 for p in Producto.objects.filter(categoria__nombre="Latas y aderezos")}
+    sin_presentacion = ["Ketchup bote", "Ketchup lata", "Jalapeño lata", "Jalapeño bote", "Queso lata",
+                        "Chile Olancho", "Barbacoa", "Ranch", "Mayonesa", "Vinagre blanco"]
+    esperado = {n: ("unidad", "") for n in sin_presentacion} | {"Ketchup bolsa": ("unidad", "caja")}
+    assert {n: productos[n] for n in esperado} == esperado

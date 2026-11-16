@@ -76,3 +76,14 @@ def test_encargado_reporta_consumo_por_presentacion_escrita(cliente_de, encargad
     })
     assert respuesta.status_code in (200, 302)
     assert Existencia.objects.get(producto=producto, ubicacion=santa_cruz).cantidad == Decimal("12")
+
+
+def test_historial_muestra_rol_de_cada_usuario(cliente_de, dueno, bodeguero, encargado_sc, bodega, santa_cruz, producto, proveedor):
+    """D-54: el dueño distingue quién registró cada movimiento por su rol (y la sucursal del encargado)."""
+    from inventario import servicios
+    servicios.registrar_entrada(producto.pk, Decimal("10"), proveedor.pk, bodeguero.pk)
+    servicios.registrar_salida(producto.pk, Decimal("4"), santa_cruz.pk, bodeguero.pk)
+    cliente_de(encargado_sc).post(reverse("inventario:consumo"), {"producto": producto.pk, "cantidad": "1"})
+    html = cliente_de(dueno).get(reverse("inventario:historial")).content.decode()
+    assert "<th>Rol</th>" in html
+    assert "Bodeguero</td>" in html and "Encargado de sucursal · Santa Cruz</td>" in html

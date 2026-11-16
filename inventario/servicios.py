@@ -217,7 +217,7 @@ def existencia_en_bodega(producto_id):
 
 def historial(producto_id=None, ubicacion_id=None):  # RF-12: orden cronológico descendente
     movimientos = MovimientoInventario.objects.select_related(
-        "producto", "origen", "destino", "usuario", "anulado_por", "reemplaza_a",
+        "producto", "origen", "destino", "usuario__rol", "usuario__sucursal", "anulado_por", "reemplaza_a",
         "entradainventario__proveedor", "salidainventario__discrepancia",
     )
     if producto_id:

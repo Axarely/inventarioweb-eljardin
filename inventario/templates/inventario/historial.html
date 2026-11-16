@@ -24,7 +24,7 @@
 <div class="table-responsive">
 <table class="table table-bordered align-middle bg-white small">
   <thead class="table-light">
-    <tr><th>#</th><th>Fecha</th><th>Tipo</th><th>Producto</th><th class="text-end">Cantidad</th><th>Origen</th><th>Destino</th><th>Proveedor</th><th>Usuario</th><th>Estado</th>{% if perms.inventario.anular_movimiento %}<th class="text-end">Acciones</th>{% endif %}</tr>
+    <tr><th>#</th><th>Fecha</th><th>Tipo</th><th>Producto</th><th class="text-end">Cantidad</th><th>Origen</th><th>Destino</th><th>Proveedor</th><th>Usuario</th><th>Rol</th><th>Estado</th>{% if perms.inventario.anular_movimiento %}<th class="text-end">Acciones</th>{% endif %}</tr>
   </thead>
   <tbody>
   {% for m in movimientos %}
@@ -38,6 +38,7 @@
       <td>{{ m.destino|default:"—" }}</td>
       <td>{% if m.tipo == "entrada" %}{{ m.entradainventario.proveedor|default:"—" }}{% else %}—{% endif %}</td>
       <td>{{ m.usuario.nombre }}</td>
+      <td class="small">{{ m.usuario.descripcion_rol }}</td>{# D-54 #}
       <td>
         {% if m.anulado %}
           <span class="pill pill-inactivo">Anulado</span>
@@ -62,7 +63,7 @@
       {% endif %}
     </tr>
   {% empty %}
-    <tr><td colspan="11" class="text-muted">No hay movimientos que coincidan.</td></tr>
+    <tr><td colspan="12" class="text-muted">No hay movimientos que coincidan.</td></tr>
   {% endfor %}
   </tbody>
 </table>

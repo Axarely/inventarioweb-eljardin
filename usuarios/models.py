@@ -120,6 +120,13 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     def bloqueo_temporal_activo(self, ahora=None):
         return self.bloqueado_hasta is not None and self.bloqueado_hasta > (ahora or timezone.now())
 
+    @property
+    def descripcion_rol(self):
+        """D-54: "Bodeguero", "Encargado · Santa Cruz", "Administrador" (superusuario sin rol) o "Sin rol"."""
+        if self.rol_id:
+            return f"{self.rol} · {self.sucursal}" if self.sucursal_id else str(self.rol)
+        return "Administrador" if self.is_superuser else "Sin rol"
+
     def minutos_de_bloqueo(self, ahora=None):
         """Minutos (redondeados hacia arriba) que faltan para que termine el bloqueo temporal; 0 si no hay."""
         if not self.bloqueo_temporal_activo(ahora):

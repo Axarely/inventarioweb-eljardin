@@ -17,7 +17,7 @@ URL_CREAR_PRODUCTO = reverse("usuarios:producto_crear")
 
 
 def producto(**cambios):
-    return {"nombre": "Harina", "categoria": "", "unidad_medida": "lb", "stock_minimo": "5", **cambios}
+    return {"nombre": "Maicena", "categoria": "", "unidad_medida": "lb", "stock_minimo": "5", **cambios}
 
 
 # --- Categorías fijas ---------------------------------------------------------------------------
@@ -54,8 +54,8 @@ def test_rf09_obtener_o_crear():
 
 def test_rf09_producto_con_categoria_nueva(cliente_de, dueno):
     respuesta = cliente_de(dueno).post(URL_CREAR_PRODUCTO, producto(nueva_categoria="Bebidas"), follow=True)
-    harina = Producto.objects.get(nombre="Harina")
-    assert harina.categoria.nombre == "Bebidas" and not harina.categoria.es_base
+    maicena = Producto.objects.get(nombre="Maicena")
+    assert maicena.categoria.nombre == "Bebidas" and not maicena.categoria.es_base
     assert "Categoría «Bebidas» agregada." in respuesta.content.decode()
 
 
@@ -64,7 +64,7 @@ def test_d35_categoria_nueva_que_ya_existe_avisa(cliente_de, dueno, escrita):
     """D-35: sin importar mayúsculas, tildes ni singular/plural, se avisa que ya existe y no se duplica."""
     respuesta = cliente_de(dueno).post(URL_CREAR_PRODUCTO, producto(nueva_categoria=escrita))
     assert "La categoría «Lácteos» ya existe" in str(respuesta.context["form"].errors["nueva_categoria"])
-    assert not Producto.objects.filter(nombre="Harina").exists()
+    assert not Producto.objects.filter(nombre="Maicena").exists()
     assert Categoria.objects.filter(nombre__icontains="cteo").count() == 1
 
 
@@ -84,7 +84,7 @@ def test_d35_categoria_realmente_nueva_se_agrega(cliente_de, dueno):
 def test_rf09_categoria_obligatoria(cliente_de, dueno):
     respuesta = cliente_de(dueno).post(URL_CREAR_PRODUCTO, producto())
     assert "Elija una categoría o escriba una nueva." in str(respuesta.context["form"].errors["categoria"])
-    assert not Producto.objects.filter(nombre="Harina").exists()
+    assert not Producto.objects.filter(nombre="Maicena").exists()
 
 
 def test_rf09_categoria_nueva_no_queda_si_el_producto_falla(cliente_de, dueno, otro_producto):
@@ -168,9 +168,9 @@ def test_d36_no_se_registran_productos_en_kilos(cliente_de, dueno, unidad):
     respuesta = cliente_de(dueno).post(URL_CREAR_PRODUCTO, producto(categoria=categoria_fija("Proteínas").pk,
                                                                      unidad_medida=unidad))
     assert "escriba la unidad en libras" in str(respuesta.context["form"].errors["unidad_medida"])
-    assert not Producto.objects.filter(nombre="Harina").exists()
+    assert not Producto.objects.filter(nombre="Maicena").exists()
 
 
 def test_d36_libras_si_se_aceptan(cliente_de, dueno):
     cliente_de(dueno).post(URL_CREAR_PRODUCTO, producto(categoria=categoria_fija("Proteínas").pk, unidad_medida="lb"))
-    assert Producto.objects.get(nombre="Harina").unidad_medida == "lb"
+    assert Producto.objects.get(nombre="Maicena").unidad_medida == "lb"

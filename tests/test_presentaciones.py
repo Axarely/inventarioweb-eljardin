@@ -226,11 +226,11 @@ def test_d41_nuggets_se_cuentan_por_paquete(cliente_de, bodeguero, bodega, prove
 
 def test_d46_presentacion_escrita_a_mano(cliente_de, dueno, bodeguero, bodega, proveedor):
     respuesta = cliente_de(dueno).post(reverse("usuarios:producto_crear"), {
-        "nombre": "Harina", "categoria": categoria_fija("Abarrotes").pk, "unidad_medida": "lb",
+        "nombre": "Maicena", "categoria": categoria_fija("Abarrotes").pk, "unidad_medida": "lb",
         "presentacion": "  Saco ", "unidades_por_presentacion": "50", "stock_minimo": "0",
     })
     assert respuesta.status_code == 302
-    harina = Producto.objects.get(nombre="Harina")
+    harina = Producto.objects.get(nombre="Maicena")
     assert harina.presentacion == "saco" and harina.descripcion_presentacion() == "Saco de 50 lb"
     cliente_de(bodeguero).post(reverse("inventario:entrada"), {
         "producto": harina.pk, "cantidad": "2", "medida": "presentacion", "proveedor": "",
@@ -261,3 +261,21 @@ def test_d47_catalogo_de_concentrados():
                "Concentrado maracuyá", "Concentrado Jamaica", "Concentrado ajillo"]
     assert concentrados == {n: ("unidad", "bolsa", None, False) for n in nombres}
     assert Producto.objects.get(nombre="Concentrado Jamaica").descripcion_presentacion() == "Bolsa"
+
+
+def test_d48_catalogo_de_abarrotes():
+    abarrotes = {p.nombre: (p.unidad_medida, p.presentacion, p.unidades_por_presentacion)
+                 for p in Producto.objects.filter(categoria__nombre="Abarrotes")}
+    esperado = {
+        "Pan clásico": ("paquete", "caja", None), "Pan reina": ("paquete", "caja", None),
+        "Harina": ("unidad", "fardo", None), "Azúcar": ("unidad", "fardo", None),
+        "Pasta linguini": ("unidad", "caja", None), "Almendras": ("unidad", "bolsa", None),
+        "Pecanas": ("unidad", "bolsa", None), "Nueces": ("unidad", "bolsa", None),
+        "Adobo": ("unidad", "bote", None), "Paprika": ("unidad", "bote", None), "Cilantro": ("unidad", "bote", None),
+        "Consomé": ("unidad", "saco", None), "Empanizador": ("unidad", "saco", None),
+        "Nachos": ("unidad", "", None), "Rotisserie chicken": ("unidad", "", None), "Sal": ("unidad", "", None),
+        "Pimienta": ("unidad", "", None), "Ajo en polvo": ("unidad", "", None),
+    }
+    assert {n: abarrotes[n] for n in esperado} == esperado
+    assert Producto.objects.get(nombre="Harina").descripcion_presentacion() == "Fardo"
+    assert Producto.objects.get(nombre="Pan clásico").nombre_presentacion() == "cajas"

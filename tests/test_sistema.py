@@ -92,10 +92,10 @@ def test_sis03_dueno(client, dueno, encargado_sc, bodeguero, bodega, santa_cruz,
     alerta = AlertaInventario.objects.get(estado="pendiente", existencia__ubicacion=bodega)
     client.post(reverse("alertas:atendida", args=[alerta.pk]))
     client.post(reverse("usuarios:producto_crear"), {
-        "nombre": "Harina", "categoria": Categoria.objects.get(nombre="Abarrotes").pk, "unidad_medida": "lb",
+        "nombre": "Maicena", "categoria": Categoria.objects.get(nombre="Abarrotes").pk, "unidad_medida": "lb",
         "stock_minimo": "5"})
     client.post(reverse("proveedores:crear"), {"nombre": "Molinos del Valle", "contacto": "9500-0000"})
-    assert Producto.objects.filter(nombre="Harina").exists()
+    assert Producto.objects.filter(nombre="Maicena").exists()
     for ruta in ("usuarios:usuarios", "usuarios:roles", "proveedores:lista", "inventario:historial"):
         assert client.get(reverse(ruta)).status_code == 200, ruta
     exportado = client.get(reverse("reportes:exportar", args=["pdf"]), {"tipo": "existencias"})

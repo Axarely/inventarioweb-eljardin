@@ -274,16 +274,16 @@ def test_rf09_bodeguero_crea_producto_y_vuelve(cliente_de, bodeguero):
     destino = reverse("inventario:entrada")
     respuesta = cliente_de(bodeguero).post(
         reverse("usuarios:producto_crear") + f"?next={destino}",
-        {"nombre": "Harina", "categoria": categoria_fija("Abarrotes").pk, "unidad_medida": "lb", "stock_minimo": "5",
+        {"nombre": "Maicena", "categoria": categoria_fija("Abarrotes").pk, "unidad_medida": "lb", "stock_minimo": "5",
          "next": destino},
     )
     assert respuesta.status_code == 302 and respuesta["Location"] == destino
-    assert Producto.objects.filter(nombre="Harina").exists()
+    assert Producto.objects.filter(nombre="Maicena").exists()
 
 
 def test_rf09_next_externo_se_ignora(cliente_de, dueno):
     respuesta = cliente_de(dueno).post(reverse("usuarios:producto_crear"), {
-        "nombre": "Sal", "categoria": categoria_fija("Abarrotes").pk, "unidad_medida": "lb", "stock_minimo": "1",
+        "nombre": "Comino", "categoria": categoria_fija("Abarrotes").pk, "unidad_medida": "lb", "stock_minimo": "1",
         "next": "https://malicioso.example.com/",
     })
     assert respuesta["Location"] == reverse("usuarios:productos")

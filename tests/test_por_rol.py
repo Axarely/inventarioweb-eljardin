@@ -40,10 +40,10 @@ def test_bodeguero_crea_producto_con_presentacion_escrita_y_registra_con_proveed
     html = cliente.get(reverse("usuarios:producto_crear")).content.decode()
     assert 'list="lista-presentacion"' in html
     cliente.post(reverse("usuarios:producto_crear"), {
-        "nombre": "Harina", "categoria": categoria_fija("Abarrotes").pk, "unidad_medida": "lb",
+        "nombre": "Maicena", "categoria": categoria_fija("Abarrotes").pk, "unidad_medida": "lb",
         "presentacion": "saco", "unidades_por_presentacion": "50", "stock_minimo": "0",
     })
-    harina = Producto.objects.get(nombre="Harina")
+    harina = Producto.objects.get(nombre="Maicena")
     assert harina.descripcion_presentacion() == "Saco de 50 lb"
     html = cliente.get(reverse("inventario:entrada")).content.decode()
     assert "Proveedor (opcional)" in html
@@ -65,7 +65,7 @@ def test_dueno_edita_presentacion_escrita(cliente_de, dueno, producto):
     })
     producto.refresh_from_db()
     assert producto.descripcion_presentacion() == "Bote de 4 unidades"
-    assert "Bote de 4 unidades" in cliente.get(reverse("usuarios:productos")).content.decode()
+    assert "Bote de 4 unidades" in cliente.get(reverse("usuarios:productos"), {"q": producto.nombre}).content.decode()
 
 
 def test_encargado_reporta_consumo_por_presentacion_escrita(cliente_de, encargado_sc, santa_cruz, producto, con_existencia):

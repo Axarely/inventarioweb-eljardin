@@ -115,6 +115,13 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     def esta_bloqueado(self, ahora=None):
         return self.bloqueado_hasta is not None and self.bloqueado_hasta > (ahora or timezone.now())
 
+    def minutos_de_bloqueo(self, ahora=None):
+        """Minutos (redondeados hacia arriba) que faltan para que termine el bloqueo; 0 si no está bloqueado."""
+        if not self.esta_bloqueado(ahora):
+            return 0
+        segundos = (self.bloqueado_hasta - (ahora or timezone.now())).total_seconds()
+        return max(1, -(-int(segundos) // 60))
+
     @property
     def es_solicitud_pendiente(self):
         """D-31: misma condición que UsuarioManager.solicitudes_pendientes()."""

@@ -11,6 +11,7 @@ from django.views import View
 from django.views.generic import CreateView, FormView, ListView, UpdateView
 
 from autenticacion.mixins import PermisoRequeridoMixin
+from autenticacion.servicios import reiniciar_intentos
 from config.ui import FormularioMixin, siguiente_seguro
 
 from .forms import (
@@ -116,6 +117,7 @@ class UsuarioPasswordView(PermisoRequeridoMixin, FormularioMixin, FormView):  # 
 
     def form_valid(self, form):
         form.save()
+        reiniciar_intentos(self.usuario)  # D-51: con la contraseña nueva, la cuenta queda desbloqueada
         messages.success(self.request, f"Contraseña de «{self.usuario.nombre}» restablecida.")
         return super().form_valid(form)
 
@@ -134,6 +136,17 @@ class UsuarioActivarView(PermisoRequeridoMixin, View):  # RF-10: desactivar en l
             usuario.save(update_fields=["activo"])
             estado = "activado" if usuario.activo else "desactivado"
             messages.success(request, f"Usuario «{usuario.nombre}» {estado}.")
+        return redirect("usuarios:usuarios")
+
+
+class UsuarioDesbloquearView(PermisoRequeridoMixin, View):  # D-51 (RNF-02)
+    """Quita el bloqueo temporal por intentos fallidos sin esperar a que venza."""
+    permission_required = "usuarios.change_usuario"
+
+    def post(self, request, pk):
+        usuario = get_object_or_404(Usuario, pk=pk)
+        reiniciar_intentos(usuario)
+        messages.success(request, f"Cuenta de «{usuario.nombre}» desbloqueada. Ya puede iniciar sesión.")
         return redirect("usuarios:usuarios")
 
 

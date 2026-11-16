@@ -12,7 +12,8 @@ class IniciarSesionForm(AuthenticationForm):  # RF-01, RNF-02
     error_messages = {
         "invalid_login": "Correo o contraseña incorrectos.",
         "inactive": "Correo o contraseña incorrectos.",
-        "bloqueado": "Cuenta bloqueada temporalmente por intentos fallidos. Intente de nuevo más tarde.",
+        "bloqueado": "Cuenta bloqueada temporalmente por intentos fallidos. Intente de nuevo en %(minutos)s "
+                     "o pida al administrador que la desbloquee (Usuarios → Desbloquear).",
     }
 
     def clean(self):
@@ -20,7 +21,11 @@ class IniciarSesionForm(AuthenticationForm):  # RF-01, RNF-02
         usuario = get_user_model().objects.filter(correo__iexact=correo).first() if correo else None
         if usuario is not None and usuario.esta_bloqueado():
             # Ni siquiera se comprueba la contraseña mientras dure el bloqueo.
-            raise ValidationError(self.error_messages["bloqueado"], code="bloqueado")
+            minutos = usuario.minutos_de_bloqueo()
+            raise ValidationError(
+                self.error_messages["bloqueado"], code="bloqueado",
+                params={"minutos": "1 minuto" if minutos == 1 else f"{minutos} minutos"},
+            )
         try:
             datos = super().clean()
         except ValidationError:
